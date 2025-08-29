@@ -33,9 +33,6 @@ services:
         - key: ABLY_API_KEY
           # Set this securely in the Render Dashboard
           sync: false
-        # Optional: if your backend needs to know allowed origins
-        # - key: ALLOWED_ORIGINS
-        #   value: https://npcchatter-frontend.onrender.com
 
     # --- Frontend (React/Vite) ---
     - type: web
