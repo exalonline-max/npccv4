@@ -2,6 +2,7 @@ previews:
   generation: automatic
 
 services:
+  # --- Backend (Flask) ---
   - type: web
     name: npcchatter-backend
     runtime: python
@@ -9,8 +10,10 @@ services:
     plan: starter
     region: oregon
     autoDeployTrigger: commit
+  pythonVersion: 3.11
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app -b 0.0.0.0:$PORT
+    # Use eventlet for Flask-SocketIO / websockets
+    startCommand: gunicorn -k eventlet -w 1 app:app -b 0.0.0.0:$PORT
     healthCheckPath: /api/health
     envVars:
       - key: APP_SECRET
@@ -20,29 +23,45 @@ services:
           name: npcchatter-db
           property: connectionString
       - key: CLERK_ISSUER
-        value: https://YOUR-CLERK-INSTANCE.clerk.accounts.dev
+        value: https://growing-badger-13.clerk.accounts.dev
       - key: CLERK_JWKS_URL
-        value: https://YOUR-CLERK-INSTANCE.clerk.accounts.dev/.well-known/jwks.json
+        value: https://growing-badger-13.clerk.accounts.dev/.well-known/jwks.json
       - key: ABLY_API_KEY
+        # Set this securely in the Render Dashboard
         sync: false
+      # Optional: if your backend needs to know allowed origins
+      # - key: ALLOWED_ORIGINS
+      #   value: https://npcchatter-frontend.onrender.com
 
+  # --- Frontend (React/Vite) ---
   - type: web
     name: npcchatter-frontend
     runtime: static
     rootDir: frontend
     plan: free
+  autoDeployTrigger: commit
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
+    # SPA rewrite so React Router deep links work
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: VITE_CLERK_PUBLISHABLE_KEY
+        # Set in dashboard (and for previews if you use them)
         sync: false
       - key: VITE_API_BASE
+        # Set to your backend public URL (see notes below)
         sync: false
       - key: VITE_ABLY_AUTH_URL
+        # If your backend name changes, update this
         value: https://npcchatter-backend.onrender.com/api/realtime/token
 
+# --- Database ---
 databases:
   - name: npcchatter-db
     databaseName: npcchatter
-    plan: free
+    plan: starter
     region: oregon
+    postgresMajorVersion: 15
