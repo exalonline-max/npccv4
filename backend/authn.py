@@ -20,7 +20,12 @@ def require_user():
     if not auth.startswith("Bearer "):
         abort(401, "Missing bearer token")
     token = auth.split(" ", 1)[1]
-    key = _jwks().get_signing_key_from_jwt(token).key
+    try:
+        key = _jwks().get_signing_key_from_jwt(token).key
+    except Exception as e:
+        # PyJWKClient will raise for malformed tokens or when it cannot find a key.
+        abort(401, f"Invalid token (key lookup failed): {e}")
+
     try:
         claims = jwt.decode(
             token,
