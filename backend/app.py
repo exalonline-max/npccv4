@@ -29,6 +29,27 @@ app.register_blueprint(realtime_bp)
 app.register_blueprint(dice_bp)
 
 
+# Diagnostic root route to confirm the app is reachable on Render and to aid debugging.
+@app.get("/")
+def _root():
+  return {"ok": True, "service": "npcchatter-backend"}
+
+
+# Print registered routes at import time so Gunicorn logs show what endpoints exist.
+def _log_routes():
+  try:
+    import sys
+    sys.stdout.write("Registered routes:\n")
+    for rule in sorted(app.url_map.iter_rules(), key=lambda r: r.rule):
+      sys.stdout.write(f"  {rule.methods} {rule.rule}\n")
+    sys.stdout.flush()
+  except Exception:
+    pass
+
+
+_log_routes()
+
+
 @app.after_request
 def add_cors_headers(response):
   # Provide a conservative fallback for environments where Flask-CORS or a
