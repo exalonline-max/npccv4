@@ -7,7 +7,9 @@ from .dice import bp as dice_bp
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = settings.APP_SECRET
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+# Enable CORS for API routes and allow the Authorization header (used by Clerk JWT)
+# supports_credentials=True so that browsers may send credentials if needed.
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True, allow_headers=["Authorization", "Content-Type"])
 
 app.register_blueprint(health_bp)
 app.register_blueprint(realtime_bp)
