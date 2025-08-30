@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, abort
+from flask import Blueprint, jsonify, request, abort, make_response
 from ably import AblyRest
 from .config import settings
 from .authn import require_user
@@ -30,3 +30,16 @@ def ably_token():
         ttl=60 * 60 * 1000,
     )
     return jsonify(token_request)
+
+
+@bp.options("/api/realtime/token")
+def ably_token_options():
+    # Explicit preflight response to satisfy browsers when Authorization header
+    # and credentials are used. This is a conservative, explicit CORS reply.
+    resp = make_response(("", 204))
+    resp.headers["Access-Control-Allow-Origin"] = "https://www.npcchatter.com"
+    resp.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type"
+    resp.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
+    resp.headers["Access-Control-Allow-Credentials"] = "true"
+    resp.headers["Vary"] = "Origin"
+    return resp

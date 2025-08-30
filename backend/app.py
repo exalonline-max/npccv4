@@ -14,13 +14,30 @@ app = Flask(__name__)
 
 # Allow the frontend origins we use in development and production. When credentials
 # are required, the response must echo the Origin (not use '*').
-FRONTEND_ORIGINS = {"https://www.npcchatter.com", "http://localhost:5173"}
+FRONTEND_ORIGINS = {
+  "https://www.npcchatter.com",   # prod (www)
+  "https://npcchatter.com",       # prod (apex) — add if you ever serve from apex
+  "http://localhost:5173",        # Vite dev
+  "http://127.0.0.1:5173",        # Vite dev (loopback)
+}
 
 CORS(
   app,
   resources={r"/api/*": {"origins": list(FRONTEND_ORIGINS)}},
   supports_credentials=True,
-  allow_headers=["Authorization", "Content-Type"],
+  methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allow_headers=[
+    "Authorization",
+    "Content-Type",
+    "X-Requested-With",
+    "Ably-Agent",
+    "Ably-Version",
+  ],
+  expose_headers=[
+    "Content-Length",
+    "Content-Type",
+  ],
+  max_age=600,
 )
 
 # Register API blueprints
@@ -52,15 +69,26 @@ _log_routes()
 
 @app.after_request
 def add_cors_headers(response):
-  # Provide a conservative fallback for environments where Flask-CORS or a
-  # proxy may not correctly expose the Authorization header or credentials.
+  """Fallback CORS headers in case a proxy strips them.
+  If Flask-CORS already set headers, we leave them alone.
+  """
+  if "Access-Control-Allow-Origin" in response.headers:
+    return response  # Flask-CORS already handled
+
   origin = request.headers.get("Origin")
-  if origin and origin in FRONTEND_ORIGINS:
+  if origin and origin in FRONTEND_ORIGINS and request.path.startswith("/api/"):
     response.headers["Access-Control-Allow-Origin"] = origin
     response.headers["Vary"] = "Origin"
-    response.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type"
-    response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
     response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = ",".join([
+      "Authorization",
+      "Content-Type",
+      "X-Requested-With",
+      "Ably-Agent",
+      "Ably-Version",
+    ])
+    response.headers["Access-Control-Max-Age"] = "600"
   return response
 
 
