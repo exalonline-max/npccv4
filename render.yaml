@@ -52,7 +52,10 @@ services:
       - key: VITE_ABLY_PUBLISHABLE_KEY
         sync: false
       - key: VITE_ABLY_AUTH_URL
-        value: https://npcchatter-backend.onrender.com/api/realtime/token
+        # Point to the backend service hostname that responded correctly during verification.
+        # If your Render service URL differs, update this to the service address Render shows
+        # in the dashboard for the backend (example: npcchatter-backend-wll0.onrender.com).
+        value: https://npcchatter-backend-wll0.onrender.com/api/realtime/token
 
 # --- Database ---
 databases:
