@@ -24,11 +24,20 @@ def ably_token():
         capability = {chan: ["publish", "subscribe", "presence", "history"]}
 
     ably = AblyRest(settings.ABLY_API_KEY)
-    token_request = ably.auth.create_token_request(
-        client_id=user_id,
-        capability=capability or None,
-        ttl=60 * 60 * 1000,
-    )
+    try:
+        token_request = ably.auth.create_token_request(
+            client_id=user_id,
+            capability=capability or None,
+            ttl=60 * 60 * 1000,
+        )
+    except Exception as e:
+        # Log full traceback to stdout (Render logs) for debugging, but return a
+        # non-secret JSON error to the client. This avoids generic 500 HTML with
+        # no context.
+        import sys, traceback
+        traceback.print_exc(file=sys.stdout)
+        return jsonify({"error": "failed to create Ably token request"}), 500
+
     return jsonify(token_request)
 
 
