@@ -10,9 +10,9 @@ services:
     plan: starter
     region: oregon
     autoDeploy: true
-  buildCommand: pip install -r backend/requirements.txt
-  # Change directory to repo root then run Gunicorn importing the backend package
-  # so relative imports inside the package work correctly.
+    buildCommand: pip install -r backend/requirements.txt
+    # Change directory to repo root then run Gunicorn importing the backend package
+    # so relative imports inside the package work correctly.
     startCommand: gunicorn --chdir .. --worker-class sync -w 2 backend.app:app -b 0.0.0.0:$PORT
     healthCheckPath: /api/health
     envVars:
