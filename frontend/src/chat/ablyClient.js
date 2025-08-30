@@ -11,7 +11,11 @@ export function createAblyRealtime(getToken, channel){
       (async () => {
         try {
           const tokenRes = await fetch(`${ABLY_AUTH_URL}?channel=${encodeURIComponent(channel)}`, {
-            headers: { 'Authorization': `Bearer ${await getToken()}` }
+            headers: {
+              'Authorization': `Bearer ${await (async () => {
+                try { return await getToken({ template: 'backend' }); } catch (_) { return await getToken(); }
+              })()}`
+            }
           })
           if(!tokenRes.ok){
             const text = await tokenRes.text()
@@ -31,16 +35,4 @@ export function createAblyRealtime(getToken, channel){
 
 // Example Clerk UserButton with custom menu items
 // You can move this into your layout/header file as needed
-import { UserButton } from "@clerk/clerk-react";
-
-export function AppUserMenu() {
-  return (
-    <UserButton>
-      <UserButton.MenuItems>
-        <UserButton.Link label="Campaigns" href="/campaigns" />
-        <UserButton.Link label="Character Sheet" href="/character" />
-        <UserButton.Link label="Preferences" href="/preferences" />
-      </UserButton.MenuItems>
-    </UserButton>
-  );
-}
+// Note: UI components belong in .jsx files. Keep this file focused on Ably client.
