@@ -1,44 +1,48 @@
-from flask import Flask
+from __future__ import annotations
+
+import os
+from flask import Flask, request
 from flask_cors import CORS
+
+# local imports (blueprints and settings)
 from .config import settings
 from .routes.health import bp as health_bp
 from .realtime import bp as realtime_bp
 from .dice import bp as dice_bp
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = settings.APP_SECRET
-# Enable CORS for API routes and allow the Authorization header (used by Clerk JWT)
-# supports_credentials=True so that browsers may send credentials if needed.
-allowed_origins = [
-    "https://www.npcchatter.com",
-    "https://npcchatter.com",
-    "http://localhost:5173",
-]
+
+# Allow the frontend origins we use in development and production. When credentials
+# are required, the response must echo the Origin (not use '*').
+FRONTEND_ORIGINS = {"https://www.npcchatter.com", "http://localhost:5173"}
+
 CORS(
-    app,
-    resources={r"/api/*": {
-        "origins": allowed_origins,
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Authorization", "Content-Type"],
-        "max_age": 86400,
-    }},
-    supports_credentials=False,  # no cookies; using Authorization: Bearer
+  app,
+  resources={r"/api/*": {"origins": list(FRONTEND_ORIGINS)}},
+  supports_credentials=True,
+  allow_headers=["Authorization", "Content-Type"],
 )
 
+# Register API blueprints
 app.register_blueprint(health_bp)
 app.register_blueprint(realtime_bp)
 app.register_blueprint(dice_bp)
 
-# Preflight handler for any /api/* route to ensure OPTIONS returns 204
-@app.route('/api/<path:subpath>', methods=['OPTIONS'])
-def cors_preflight(subpath):
-    return ("", 204)
-
-if __name__ == "__main__":
-    app.run(port=5000)
-
 
 @app.after_request
 def add_cors_headers(response):
-    response.headers.add('Vary', 'Origin')
-    return response
+  # Provide a conservative fallback for environments where Flask-CORS or a
+  # proxy may not correctly expose the Authorization header or credentials.
+  origin = request.headers.get("Origin")
+  if origin and origin in FRONTEND_ORIGINS:
+    response.headers["Access-Control-Allow-Origin"] = origin
+    response.headers["Vary"] = "Origin"
+    response.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+  return response
+
+
+if __name__ == "__main__":
+  port = int(os.getenv("PORT", "5000"))
+  app.run(host="0.0.0.0", port=port, debug=True)

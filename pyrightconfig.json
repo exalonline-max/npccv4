@@ -1,0 +1,13 @@
+{
+  "venvPath": "/Users/larente/npccv4/.venv",
+  "venv": "",
+  "executionEnvironments": [
+    {
+      "root": "./backend",
+      "extraPaths": [
+        "./backend",
+        "/Users/larente/npccv4/.venv/lib/python3.13/site-packages"
+      ]
+    }
+  ]
+}

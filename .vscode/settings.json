@@ -1,0 +1,12 @@
+{
+  // Use the project's virtualenv Python for the editor and analysis
+  "python.defaultInterpreterPath": "/Users/larente/npccv4/.venv/bin/python",
+  "python.pythonPath": "/Users/larente/npccv4/.venv/bin/python",
+
+  // Help Pylance find installed packages in the venv site-packages
+  "python.analysis.extraPaths": [
+    "/Users/larente/npccv4/.venv/lib/python3.13/site-packages",
+    "./backend"
+  ],
+  "python.analysis.indexing": true
+}
