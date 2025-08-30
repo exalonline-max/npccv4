@@ -3,12 +3,27 @@ import * as Ably from 'ably'
 const API_BASE = import.meta.env.VITE_API_BASE
 const ABLY_AUTH_URL = import.meta.env.VITE_ABLY_AUTH_URL || `${API_BASE}/api/realtime/token`
 
-export function createAblyRealtime(getToken){
+export function createAblyRealtime(getToken, channel){
   return new Ably.Realtime.Promise({
-    authUrl: `${ABLY_AUTH_URL}?channel=campaign:12345`,
-    authHeaders: async () => ({
-      'Authorization': `Bearer ${await getToken()}`
-    }),
+    // Use authCallback so we can include the Clerk JWT in the Authorization header
+    // when fetching a token request from our backend.
+    authCallback: (tokenParams, callback) => {
+      (async () => {
+        try {
+          const tokenRes = await fetch(`${ABLY_AUTH_URL}?channel=${encodeURIComponent(channel)}`, {
+            headers: { 'Authorization': `Bearer ${await getToken()}` }
+          })
+          if(!tokenRes.ok){
+            const text = await tokenRes.text()
+            throw new Error(`Auth request failed: ${tokenRes.status} ${text}`)
+          }
+          const tokenRequest = await tokenRes.json()
+          callback(null, tokenRequest)
+        } catch(err){
+          callback(err)
+        }
+      })()
+    },
     echoMessages: false,
     recover: 'connection',
   })

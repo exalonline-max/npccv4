@@ -14,7 +14,7 @@ export default function ChatPanel({ campaignId }){
   useEffect(() => {
     let client, channel
     ;(async () => {
-      client = createAblyRealtime(() => getToken())
+  client = createAblyRealtime(() => getToken(), channelName)
       await client.connection.once('connected')
       channel = client.channels.get(channelName)
       channel.presence.enter({ userId: user.id, name: user.fullName })
