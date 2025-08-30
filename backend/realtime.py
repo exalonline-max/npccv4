@@ -32,7 +32,7 @@ def ably_token():
     return jsonify(token_request)
 
 
-@bp.options("/api/realtime/token")
+@bp.route("/api/realtime/token", methods=["OPTIONS"])
 def ably_token_options():
     # Explicit preflight response to satisfy browsers when Authorization header
     # and credentials are used. This is a conservative, explicit CORS reply.
