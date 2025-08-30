@@ -11,8 +11,9 @@ services:
     region: oregon
     autoDeploy: true
     buildCommand: pip install -r requirements.txt
-    # Explicitly request the synchronous worker class to avoid any eventlet/gevent workers
-    startCommand: gunicorn --worker-class sync -w 2 app:app -b 0.0.0.0:$PORT
+  # Change directory to repo root then run Gunicorn importing the backend package
+  # so relative imports inside the package work correctly.
+    startCommand: gunicorn --chdir .. --worker-class sync -w 2 backend.app:app -b 0.0.0.0:$PORT
     healthCheckPath: /api/health
     envVars:
       - key: PYTHON_VERSION
