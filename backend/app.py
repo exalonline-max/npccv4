@@ -45,11 +45,39 @@ app.register_blueprint(health_bp)
 app.register_blueprint(realtime_bp)
 app.register_blueprint(dice_bp)
 
+@app.route("/api/<path:subpath>", methods=["OPTIONS"])
+def _preflight_catchall(subpath):
+  return ("", 204)
+
 
 # Diagnostic root route to confirm the app is reachable on Render and to aid debugging.
 @app.get("/")
 def _root():
   return {"ok": True, "service": "npcchatter-backend"}
+
+
+# Lightweight diagnostics endpoint that reports presence of important env vars
+# without leaking secrets. Safe to call from the browser (no secret values).
+@app.get("/api/_diag")
+def _diag():
+  try:
+    has_ably = bool(settings.ABLY_API_KEY)
+    masked_ably = None
+    if has_ably:
+      val = settings.ABLY_API_KEY
+      if len(val) >= 8:
+        masked_ably = f"{val[:4]}...{val[-4:]}"
+      else:
+        masked_ably = "***"
+
+    return {
+      "ok": True,
+      "has_ably_key": has_ably,
+      "ably_key_masked": masked_ably,
+      "clerk_jwks_configured": bool(settings.CLERK_JWKS_URL),
+    }
+  except Exception:
+    return {"ok": False}
 
 
 # Print registered routes at import time so Gunicorn logs show what endpoints exist.
