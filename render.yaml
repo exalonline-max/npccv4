@@ -11,8 +11,8 @@ services:
     region: oregon
     autoDeploy: true
     buildCommand: pip install -r requirements.txt
-    # Use eventlet for Flask-SocketIO / websockets
-    startCommand: gunicorn -k eventlet -w 1 app:app -b 0.0.0.0:$PORT
+    # Explicitly request the synchronous worker class to avoid any eventlet/gevent workers
+    startCommand: gunicorn --worker-class sync -w 2 app:app -b 0.0.0.0:$PORT
     healthCheckPath: /api/health
     envVars:
       - key: PYTHON_VERSION
