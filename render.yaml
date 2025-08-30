@@ -38,27 +38,67 @@ services:
     plan: free
       autoDeployTrigger: commit
     buildCommand: npm ci && npm run build
-    staticPublishPath: dist
-    # SPA rewrite so React Router deep links work
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: VITE_CLERK_PUBLISHABLE_KEY
-        sync: false
-      - key: VITE_API_BASE
-        sync: false
-        - key: VITE_ABLY_PUBLISHABLE_KEY
-          # public Ably client key (do NOT put secret here)
-          sync: false
-      - key: VITE_ABLY_AUTH_URL
-        value: https://npcchatter-backend.onrender.com/api/realtime/token
+    previews:
+      generation: automatic
 
-# --- Database ---
-databases:
-  - name: npcchatter-db
-    databaseName: npcchatter
-    plan: starter
-    region: oregon
-      postgresMajorVersion: 15
+    services:
+      # --- Backend (Flask) ---
+      - type: web
+        name: npcchatter-backend
+        runtime: python
+        rootDir: backend
+        plan: starter
+        region: oregon
+        autoDeployTrigger: commit
+        pythonVersion: 3.11
+        buildCommand: pip install -r requirements.txt
+        # Use eventlet for Flask-SocketIO / websockets
+        startCommand: gunicorn -k eventlet -w 1 app:app -b 0.0.0.0:$PORT
+        healthCheckPath: /api/health
+        envVars:
+          - key: APP_SECRET
+            generateValue: true
+          - key: DATABASE_URL
+            fromDatabase:
+              name: npcchatter-db
+              property: connectionString
+          - key: CLERK_ISSUER
+            value: https://growing-badger-13.clerk.accounts.dev
+          - key: CLERK_JWKS_URL
+            value: https://growing-badger-13.clerk.accounts.dev/.well-known/jwks.json
+          - key: ABLY_API_KEY
+            # Set this securely in the Render Dashboard
+            sync: false
+
+      # --- Frontend (React/Vite) ---
+      - type: web
+        name: npcchatter-frontend
+        runtime: static
+        rootDir: frontend
+        plan: free
+        autoDeployTrigger: commit
+        buildCommand: npm ci && npm run build
+        staticPublishPath: dist
+        # SPA rewrite so React Router deep links work
+        routes:
+          - type: rewrite
+            source: /*
+            destination: /index.html
+        envVars:
+          - key: VITE_CLERK_PUBLISHABLE_KEY
+            sync: false
+          - key: VITE_API_BASE
+            sync: false
+          - key: VITE_ABLY_PUBLISHABLE_KEY
+            # public Ably client key (do NOT put secret here)
+            sync: false
+          - key: VITE_ABLY_AUTH_URL
+            value: https://npcchatter-backend.onrender.com/api/realtime/token
+
+    # --- Database ---
+    databases:
+      - name: npcchatter-db
+        databaseName: npcchatter
+        plan: starter
+        region: oregon
+        postgresMajorVersion: 15
