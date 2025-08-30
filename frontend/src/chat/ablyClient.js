@@ -28,3 +28,19 @@ export function createAblyRealtime(getToken, channel){
     recover: 'connection',
   })
 }
+
+// Example Clerk UserButton with custom menu items
+// You can move this into your layout/header file as needed
+import { UserButton } from "@clerk/clerk-react";
+
+export function AppUserMenu() {
+  return (
+    <UserButton>
+      <UserButton.MenuItems>
+        <UserButton.Link label="Campaigns" href="/campaigns" />
+        <UserButton.Link label="Character Sheet" href="/character" />
+        <UserButton.Link label="Preferences" href="/preferences" />
+      </UserButton.MenuItems>
+    </UserButton>
+  );
+}
