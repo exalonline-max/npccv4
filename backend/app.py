@@ -17,3 +17,14 @@ app.register_blueprint(dice_bp)
 
 if __name__ == "__main__":
     app.run(port=5000)
+
+
+@app.after_request
+def add_cors_headers(response):
+    # Ensure CORS headers are present for all API responses (preflight and actual responses).
+    # Use a specific origin here because Access-Control-Allow-Credentials cannot be used with '*'.
+    response.headers.setdefault('Access-Control-Allow-Origin', 'https://www.npcchatter.com')
+    response.headers.setdefault('Access-Control-Allow-Headers', 'Authorization,Content-Type')
+    response.headers.setdefault('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    response.headers.setdefault('Access-Control-Allow-Credentials', 'true')
+    return response
