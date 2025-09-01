@@ -26,9 +26,9 @@ services:
           name: npcchatter-db
           property: connectionString
       - key: CLERK_ISSUER
-        value: https://growing-badger-13.clerk.accounts.dev
+  value: https://clerk.npcchatter.com
       - key: CLERK_JWKS_URL
-        value: https://growing-badger-13.clerk.accounts.dev/.well-known/jwks.json
+  value: https://clerk.npcchatter.com/.well-known/jwks.json
       - key: ABLY_API_KEY
         sync: false
 
@@ -46,7 +46,8 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_CLERK_PUBLISHABLE_KEY
-        sync: false
+  value: pk_live_Y2xlcmsubnBjY2hhdHRlci5jb20k
+  sync: false
       - key: VITE_API_BASE
   # Build-time base URL the frontend will use to call the backend API.
   # Set to the backend service hostname that currently returns the correct CORS
@@ -60,6 +61,12 @@ services:
         # If your Render service URL differs, update this to the service address Render shows
         # in the dashboard for the backend (example: npcchatter-backend-wll0.onrender.com).
         value: https://npcchatter-backend-wll0.onrender.com/api/realtime/token
+
+  # NOTE: Do NOT commit secret keys to the repository. Set the secret in the
+  # Render dashboard for the backend service (Environment > CLERK_SECRET_KEY).
+  # We declare the env var here with sync:false so Render knows about it.
+  - key: CLERK_SECRET_KEY
+    sync: false
 
 # --- Database ---
 databases:
