@@ -26,19 +26,34 @@ def require_user():
         # Possible causes: JWKS rotated or wrong JWKS URL. Try refreshing the JWKS
         # client once and retry. If that fails, include the token header 'kid' in
         # the 401 message to aid debugging (no token body is logged).
+        # First, try forcing a refresh of the primary JWKS
         try:
-            # force refresh
             global _jwks_client, _cache
             _jwks_client = PyJWKClient(settings.CLERK_JWKS_URL)
             _cache["jwks_at"] = time.time()
             key = _jwks_client.get_signing_key_from_jwt(token).key
         except Exception:
-            try:
-                hdr = jwt.get_unverified_header(token)
-                kid = hdr.get('kid')
-            except Exception:
-                kid = None
-            abort(401, f"Invalid token (key lookup failed): Unable to find a signing key that matches: {kid}")
+            # If an alternate JWKS URL is configured, try it as a fallback. This
+            # helps during short migrations when tokens from a different Clerk
+            # project may be presented to the backend.
+            if settings.CLERK_JWKS_URL_ALT:
+                try:
+                    alt_client = PyJWKClient(settings.CLERK_JWKS_URL_ALT)
+                    key = alt_client.get_signing_key_from_jwt(token).key
+                except Exception:
+                    try:
+                        hdr = jwt.get_unverified_header(token)
+                        kid = hdr.get('kid')
+                    except Exception:
+                        kid = None
+                    abort(401, f"Invalid token (key lookup failed): Unable to find a signing key that matches: {kid}")
+            else:
+                try:
+                    hdr = jwt.get_unverified_header(token)
+                    kid = hdr.get('kid')
+                except Exception:
+                    kid = None
+                abort(401, f"Invalid token (key lookup failed): Unable to find a signing key that matches: {kid}")
 
     try:
         claims = jwt.decode(
