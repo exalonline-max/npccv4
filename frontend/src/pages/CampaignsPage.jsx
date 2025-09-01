@@ -12,6 +12,9 @@ export default function CampaignsPage(){
   const [joined, setJoined] = useState(() => {
     try{ return JSON.parse(localStorage.getItem('npc:joinedCampaigns')||'[]') }catch(e){return []}
   })
+  const [active, setActive] = useState(() => {
+    try { return localStorage.getItem('npc:selectedCampaign') || null } catch(e) { return null }
+  })
   const [newName, setNewName] = useState('')
   const { getToken } = useAuth()
 
@@ -35,6 +38,7 @@ export default function CampaignsPage(){
   }, [])
 
   useEffect(()=>{ localStorage.setItem('npc:joinedCampaigns', JSON.stringify(joined)) }, [joined])
+  useEffect(()=>{ if(active) localStorage.setItem('npc:selectedCampaign', active); else localStorage.removeItem('npc:selectedCampaign') }, [active])
 
   const createCampaign = async () => {
     if(!newName.trim()) return
@@ -47,8 +51,8 @@ export default function CampaignsPage(){
       })
       if(res.ok){
         const created = await res.json()
-        setCampaigns(c=>[created,...c])
-        setJoined(j=>[created.id, ...j.filter(x=>x!==created.id)])
+  setCampaigns(c=>{ const next=[created,...c]; try{ localStorage.setItem('npc:campaigns', JSON.stringify(next)) }catch(e){}; return next })
+  setJoined(j=>[created.id, ...j.filter(x=>x!==created.id)])
         setNewName('')
         return
       }
@@ -57,8 +61,8 @@ export default function CampaignsPage(){
     // fallback: local create
     const id = Math.random().toString(36).slice(2,9)
     const entry = { id, name: newName.trim() }
-    setCampaigns(c=>[entry,...c])
-    setJoined(j=>[entry.id, ...j.filter(x=>x!==entry.id)])
+  setCampaigns(c=>{ const next=[entry,...c]; try{ localStorage.setItem('npc:campaigns', JSON.stringify(next)) }catch(e){}; return next })
+  setJoined(j=>[entry.id, ...j.filter(x=>x!==entry.id)])
     setNewName('')
   }
 
@@ -70,7 +74,9 @@ export default function CampaignsPage(){
         headers: { ...(token?{ Authorization: `Bearer ${token}` }:{}) }
       })
     }catch(e){ /* ignore */ }
-    setJoined(j=> j.includes(id) ? j : [id, ...j])
+  setJoined(j=> j.includes(id) ? j : [id, ...j])
+  // Optionally make first joined campaign active
+  setActive(prev => prev || id)
   }
 
   const myCampaigns = campaigns.filter(c=> joined.includes(c.id))
@@ -104,10 +110,12 @@ export default function CampaignsPage(){
                     <div className="font-medium">{c.name}</div>
                     <div className="text-xs opacity-60">campaign:{c.id}</div>
                   </div>
-                  <div>
+                  <div className="flex items-center gap-2">
+                    {active === c.id && <span className="text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700">Active</span>}
                     <SignedIn>
                       <button className="btn btn-sm" onClick={()=>joinCampaign(c.id)}>Join</button>
                     </SignedIn>
+                    <button className="btn btn-sm" onClick={()=>setActive(c.id)} title="Set active">Set active</button>
                   </div>
                 </div>
               ))}
@@ -121,9 +129,15 @@ export default function CampaignsPage(){
             <div className="space-y-2">
               {myCampaigns.length === 0 && <p className="text-sm opacity-70">You haven't joined any campaigns yet.</p>}
               {myCampaigns.map(c=> (
-                <div key={c.id} className="p-2 rounded border">
-                  <div className="text-sm font-medium">{c.name}</div>
-                  <div className="text-xs opacity-60">campaign:{c.id}</div>
+                <div key={c.id} className="p-2 rounded border flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium">{c.name}</div>
+                    <div className="text-xs opacity-60">campaign:{c.id}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {active === c.id && <span className="text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700">Active</span>}
+                    <button className="btn btn-sm" onClick={()=>setActive(c.id)}>Set active</button>
+                  </div>
                 </div>
               ))}
             </div>

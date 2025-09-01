@@ -72,11 +72,26 @@ def _diag():
       else:
         masked_ably = "***"
 
+    # Attempt a lightweight DB check (count campaigns) without exposing the
+    # DATABASE_URL or other secrets. This helps troubleshoot which DB the
+    # running process can reach.
+    db_count = None
+    try:
+      from sqlalchemy import create_engine, text
+      if settings.DATABASE_URL:
+        eng = create_engine(settings.DATABASE_URL, echo=False)
+        with eng.connect() as conn:
+          r = conn.execute(text('SELECT COUNT(*) FROM campaigns'))
+          db_count = int(r.scalar() or 0)
+    except Exception:
+      db_count = None
+
     return {
       "ok": True,
       "has_ably_key": has_ably,
       "ably_key_masked": masked_ably,
       "clerk_jwks_configured": bool(settings.CLERK_JWKS_URL),
+      "db_campaigns": db_count,
     }
   except Exception:
     return {"ok": False}

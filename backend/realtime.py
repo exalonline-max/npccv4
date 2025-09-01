@@ -1,13 +1,38 @@
 from flask import Blueprint, jsonify, request, abort, make_response
 from ably import AblyRest
+from sqlalchemy import create_engine, select
+from .campaigns import campaign_members_table
 from .config import settings
 from .authn import require_user
 
 bp = Blueprint("realtime", __name__)
 
+
+def _engine():
+    return create_engine(settings.DATABASE_URL, echo=False)
+
+
 def user_can_access_channel(user_id: str, channel: str) -> bool:
-    # TODO: check DB membership. For now, allow campaign:* channels.
-    return channel.startswith("campaign:")
+    # Only campaign:* channels are supported. For campaign channels, verify
+    # the user is a member by consulting the campaign_members table.
+    if not channel.startswith("campaign:"):
+        return False
+    cid = channel.split(':', 1)[1]
+    try:
+        engine = _engine()
+        with engine.connect() as conn:
+            res = conn.execute(
+                select(campaign_members_table.c.user_id).where(
+                    (campaign_members_table.c.campaign_id == cid) & (campaign_members_table.c.user_id == user_id)
+                )
+            )
+            # If the select succeeded and returned a row, the user is a member.
+            row = res.fetchone()
+            return bool(row)
+    except Exception:
+        # On DB error, default to deny to be safe.
+        return False
+
 
 @bp.get("/api/realtime/token")
 def ably_token():
@@ -20,7 +45,7 @@ def ably_token():
     capability = {}
     if chan:
         if not user_can_access_channel(user_id, chan):
-            abort(403, "Not allowed for this channel")
+            abort(403, "Not a member of that campaign")
         capability = {chan: ["publish", "subscribe", "presence", "history"]}
 
     ably = AblyRest(settings.ABLY_API_KEY)
@@ -31,9 +56,6 @@ def ably_token():
             ttl=60 * 60 * 1000,
         )
     except Exception as e:
-        # Log full traceback to stdout (Render logs) for debugging, but return a
-        # non-secret JSON error to the client. This avoids generic 500 HTML with
-        # no context.
         import sys, traceback
         traceback.print_exc(file=sys.stdout)
         return jsonify({"error": "failed to create Ably token request"}), 500
