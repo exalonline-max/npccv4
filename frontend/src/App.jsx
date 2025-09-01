@@ -4,31 +4,32 @@ import { BrowserRouter, Routes, Route, Link, NavLink } from 'react-router-dom'
 
 function Nav({ open = false, onLinkClick = () => {} }) {
   const linkClass = ({ isActive }) => (isActive ? 'underline font-medium' : 'hover:underline')
+  const safeOnLink = (...args) => { if (typeof onLinkClick === 'function') onLinkClick(...args) }
 
   return (
     <>
       {/* Desktop nav */}
       <nav className="hidden md:flex items-center gap-6 text-sm opacity-90">
-        <NavLink to="/" className={linkClass} onClick={onLinkClick}>Home</NavLink>
-        <NavLink to="/app/campaigns" className={linkClass} onClick={onLinkClick}>Campaigns</NavLink>
-        <NavLink to="/app/character" className={linkClass} onClick={onLinkClick}>Character Sheet</NavLink>
-        <NavLink to="/app/preferences" className={linkClass} onClick={onLinkClick}>Preferences</NavLink>
+  <NavLink to="/" className={linkClass} onClick={safeOnLink}>Home</NavLink>
+  <NavLink to="/app/campaigns" className={linkClass} onClick={safeOnLink}>Campaigns</NavLink>
+  <NavLink to="/app/character" className={linkClass} onClick={safeOnLink}>Character Sheet</NavLink>
+  <NavLink to="/app/preferences" className={linkClass} onClick={safeOnLink}>Preferences</NavLink>
       </nav>
 
       {/* Mobile nav (shows when open=true) */}
       <nav className={`md:hidden ${open ? 'block' : 'hidden'} mt-2 border-t pt-2`}> 
         <ul className="flex flex-col gap-2 text-sm px-2">
           <li>
-            <NavLink to="/" className={({ isActive }) => (isActive ? 'block px-3 py-2 rounded bg-gray-100 font-medium' : 'block px-3 py-2 rounded hover:bg-gray-50')} onClick={onLinkClick}>Home</NavLink>
+            <NavLink to="/" className={({ isActive }) => (isActive ? 'block px-3 py-2 rounded bg-gray-100 font-medium' : 'block px-3 py-2 rounded hover:bg-gray-50')} onClick={safeOnLink}>Home</NavLink>
           </li>
           <li>
-            <NavLink to="/app/campaigns" className={({ isActive }) => (isActive ? 'block px-3 py-2 rounded bg-gray-100 font-medium' : 'block px-3 py-2 rounded hover:bg-gray-50')} onClick={onLinkClick}>Campaigns</NavLink>
+            <NavLink to="/app/campaigns" className={({ isActive }) => (isActive ? 'block px-3 py-2 rounded bg-gray-100 font-medium' : 'block px-3 py-2 rounded hover:bg-gray-50')} onClick={safeOnLink}>Campaigns</NavLink>
           </li>
           <li>
-            <NavLink to="/app/character" className={({ isActive }) => (isActive ? 'block px-3 py-2 rounded bg-gray-100 font-medium' : 'block px-3 py-2 rounded hover:bg-gray-50')} onClick={onLinkClick}>Character Sheet</NavLink>
+            <NavLink to="/app/character" className={({ isActive }) => (isActive ? 'block px-3 py-2 rounded bg-gray-100 font-medium' : 'block px-3 py-2 rounded hover:bg-gray-50')} onClick={safeOnLink}>Character Sheet</NavLink>
           </li>
           <li>
-            <NavLink to="/app/preferences" className={({ isActive }) => (isActive ? 'block px-3 py-2 rounded bg-gray-100 font-medium' : 'block px-3 py-2 rounded hover:bg-gray-50')} onClick={onLinkClick}>Preferences</NavLink>
+            <NavLink to="/app/preferences" className={({ isActive }) => (isActive ? 'block px-3 py-2 rounded bg-gray-100 font-medium' : 'block px-3 py-2 rounded hover:bg-gray-50')} onClick={safeOnLink}>Preferences</NavLink>
           </li>
         </ul>
       </nav>

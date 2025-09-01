@@ -9,6 +9,9 @@ import './styles.css'
 if (import.meta.env.DEV) {
   try { import('./dev/errorWatch').then(m => m.installErrorWatch && m.installErrorWatch()) } catch(e) { /* ignore */ }
 }
+else {
+  try { import('./prod/errorWatchProd').then(m => m.installProdErrorWatch && m.installProdErrorWatch()) } catch(e) { /* ignore */ }
+}
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 createRoot(document.getElementById('root')).render(
