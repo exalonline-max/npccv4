@@ -26,10 +26,14 @@ services:
           name: npcchatter-db
           property: connectionString
       - key: CLERK_ISSUER
-  value: https://clerk.npcchatter.com
+        value: https://clerk.npcchatter.com
       - key: CLERK_JWKS_URL
-  value: https://clerk.npcchatter.com/.well-known/jwks.json
+        value: https://clerk.npcchatter.com/.well-known/jwks.json
+      - key: CLERK_JWKS_URL_ALT
+        value: ""
       - key: ABLY_API_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
         sync: false
 
   # --- Frontend (React/Vite) ---
@@ -46,14 +50,14 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_CLERK_PUBLISHABLE_KEY
-  value: pk_live_Y2xlcmsubnBjY2hhdHRlci5jb20k
-  sync: false
+        value: pk_live_Y2xlcmsubnBjY2hhdHRlci5jb20k
+        sync: false
       - key: VITE_API_BASE
-  # Build-time base URL the frontend will use to call the backend API.
-  # Set to the backend service hostname that currently returns the correct CORS
-  # and API responses. If your Render backend service URL differs, update it.
-  value: https://npcchatter-backend-wll0.onrender.com
-  sync: false
+        # Build-time base URL the frontend will use to call the backend API.
+        # Set to the backend service hostname that currently returns the correct CORS
+        # and API responses. If your Render backend service URL differs, update it.
+        value: https://npcchatter-backend-wll0.onrender.com
+        sync: false
       - key: VITE_ABLY_PUBLISHABLE_KEY
         sync: false
       - key: VITE_ABLY_AUTH_URL
@@ -65,8 +69,9 @@ services:
   # NOTE: Do NOT commit secret keys to the repository. Set the secret in the
   # Render dashboard for the backend service (Environment > CLERK_SECRET_KEY).
   # We declare the env var here with sync:false so Render knows about it.
-  - key: CLERK_SECRET_KEY
-    sync: false
+  # Note: Do NOT commit secret keys to the repository. Set the secret in the
+  # Render dashboard for the backend service (Environment > CLERK_SECRET_KEY).
+  # We declare CLERK_SECRET_KEY inside the backend envVars above with sync:false
 
 # --- Database ---
 databases:
