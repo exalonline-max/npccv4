@@ -5,7 +5,7 @@ from jwt import PyJWKClient
 from .config import settings
 
 _jwks_client = None
-_cache = {"jwks_at": 0}
+_cache: dict[str, float] = {"jwks_at": 0.0}
 
 def _jwks():
     global _jwks_client
