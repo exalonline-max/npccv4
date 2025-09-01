@@ -4,8 +4,17 @@ from sqlalchemy import create_engine, select
 from .campaigns import campaign_members_table
 from .config import settings
 from .authn import require_user
+import json
 
-bp = Blueprint("realtime", __name__)
+ALLOWED_ORIGIN = "https://www.npcchatter.com"
+
+def _corsify(resp):
+    resp.headers["Access-Control-Allow-Origin"] = ALLOWED_ORIGIN
+    resp.headers["Access-Control-Allow-Credentials"] = "true"
+    resp.headers["Vary"] = "Origin"
+    return resp
+
+bp = Blueprint("realtime", __name__, url_prefix="/api/realtime")
 
 
 def _engine():
@@ -34,8 +43,12 @@ def user_can_access_channel(user_id: str, channel: str) -> bool:
         return False
 
 
-@bp.get("/api/realtime/token")
+@bp.get("/token")
 def ably_token():
+    from os import environ as _env
+    ably_key = settings.ABLY_API_KEY
+    if not ably_key or ":" not in ably_key:
+        abort(500, "ABLY_API_KEY missing or not in appId.keyId:secret format")
     claims = require_user()
     user_id = claims.get("sub") or claims.get("user_id")
     if not user_id:
@@ -48,27 +61,35 @@ def ably_token():
             abort(403, "Not a member of that campaign")
         capability = {chan: ["publish", "subscribe", "presence", "history"]}
 
-    ably = AblyRest(settings.ABLY_API_KEY)
+    ably = AblyRest(ably_key)
     try:
         token_request = ably.auth.create_token_request(
             client_id=user_id,
-            capability=capability or None,
+            capability=(json.dumps(capability) if capability else None),
             ttl=60 * 60 * 1000,
         )
+        try:
+            # Helpful during diagnostics; remove or reduce in production logs.
+            print("TokenRequest.keyName:", token_request.get("keyName"))
+        except Exception:
+            pass
     except Exception as e:
         import sys, traceback
         traceback.print_exc(file=sys.stdout)
-        return jsonify({"error": "failed to create Ably token request"}), 500
+        resp = jsonify({"error": "failed to create Ably token request"})
+        resp.status_code = 500
+        return _corsify(resp)
 
-    return jsonify(token_request)
+    resp = jsonify(token_request)
+    return _corsify(resp)
 
 
-@bp.route("/api/realtime/token", methods=["OPTIONS"])
+@bp.route("/token", methods=["OPTIONS"])
 def ably_token_options():
     # Explicit preflight response to satisfy browsers when Authorization header
     # and credentials are used. This is a conservative, explicit CORS reply.
     resp = make_response(("", 204))
-    resp.headers["Access-Control-Allow-Origin"] = "https://www.npcchatter.com"
+    resp.headers["Access-Control-Allow-Origin"] = ALLOWED_ORIGIN
     resp.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type"
     resp.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
     resp.headers["Access-Control-Allow-Credentials"] = "true"
