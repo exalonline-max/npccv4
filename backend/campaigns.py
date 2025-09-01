@@ -39,7 +39,7 @@ def list_campaigns():
         engine = _engine()
         with engine.connect() as conn:
             res = conn.execute(select(campaigns_table.c.id, campaigns_table.c.name))
-            rows = [dict(r) for r in res.fetchall()]
+            rows = [dict(r._mapping) for r in res.fetchall()]
         return jsonify(rows)
     except Exception as e:
         abort(500, f"DB error: {e}")
