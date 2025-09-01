@@ -30,7 +30,7 @@ services:
       - key: CLERK_JWKS_URL
         value: https://clerk.npcchatter.com/.well-known/jwks.json
       - key: CLERK_JWKS_URL_ALT
-  value: https://growing-badger-13.clerk.accounts.dev/.well-known/jwks.json
+        value: https://growing-badger-13.clerk.accounts.dev/.well-known/jwks.json
       - key: ABLY_API_KEY
         sync: false
       - key: CLERK_SECRET_KEY
@@ -67,9 +67,6 @@ services:
         value: https://npcchatter-backend-wll0.onrender.com/api/realtime/token
 
   # NOTE: Do NOT commit secret keys to the repository. Set the secret in the
-  # Render dashboard for the backend service (Environment > CLERK_SECRET_KEY).
-  # We declare the env var here with sync:false so Render knows about it.
-  # Note: Do NOT commit secret keys to the repository. Set the secret in the
   # Render dashboard for the backend service (Environment > CLERK_SECRET_KEY).
   # We declare CLERK_SECRET_KEY inside the backend envVars above with sync:false
 
