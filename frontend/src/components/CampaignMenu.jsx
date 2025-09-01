@@ -32,6 +32,20 @@ export default function CampaignMenu({ value, onChange }){
         const raw = localStorage.getItem('npc:campaigns')
         setCampaigns(raw ? JSON.parse(raw) : [])
       }catch(e){ setCampaigns([]) }
+      
+      // Ensure the currently selected campaign (if any) appears in the list.
+      // This prevents the UI from saying "No campaigns yet" while an active
+      // campaign is selected in the sidebar (stored under 'npc:selectedCampaign').
+      try{
+        const sel = localStorage.getItem('npc:selectedCampaign')
+        if(sel){
+          setCampaigns(prev => {
+            if(!prev || prev.some(c => c.id === sel)) return prev || []
+            const entry = { id: sel, name: `campaign:${sel}` }
+            return [entry, ...(prev || [])]
+          })
+        }
+      }catch(e){ /* ignore storage errors */ }
     })()
   }, [])
 
