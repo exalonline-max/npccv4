@@ -97,6 +97,30 @@ def _diag():
     return {"ok": False}
 
 
+@app.get("/api/_jwks")
+def _jwks_diag():
+  """Return the list of key ids (kids) present in configured JWKS URLs.
+  This helps debug 'Unable to find a signing key that matches' errors by
+  showing which kids the running backend currently trusts.
+  """
+  import requests
+  out = {"ok": True, "jwks": []}
+  try:
+    urls = [u for u in [settings.CLERK_JWKS_URL, settings.CLERK_JWKS_URL_ALT] if u]
+    for u in urls:
+      try:
+        r = requests.get(u, timeout=5)
+        r.raise_for_status()
+        data = r.json()
+        keys = [k.get('kid') for k in data.get('keys', [])]
+        out['jwks'].append({"url": u, "kids": keys})
+      except Exception as e:
+        out['jwks'].append({"url": u, "error": str(e)})
+  except Exception as e:
+    return {"ok": False, "error": str(e)}
+  return out
+
+
 # Print registered routes at import time so Gunicorn logs show what endpoints exist.
 def _log_routes():
   try:
