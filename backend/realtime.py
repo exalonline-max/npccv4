@@ -65,7 +65,7 @@ def ably_token():
     try:
         # ably-python's type stubs don't define these keyword args Pylance
         # expects, so silence type checking here. Runtime will accept them.
-        token_request = ably.auth.create_token_request(  # type: ignore[arg-type]
+        token_request = ably.auth.create_token_request(  # type: ignore[call-arg,arg-type]
             client_id=user_id,
             capability=(json.dumps(capability) if capability else None),
             ttl=60 * 60 * 1000,
