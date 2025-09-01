@@ -13,28 +13,63 @@ export default function ChatPanel({ campaignId }){
 
   useEffect(() => {
     let client, channel
-    ;(async () => {
-  client = createAblyRealtime(() => getToken(), channelName)
-      await client.connection.once('connected')
-      channel = client.channels.get(channelName)
-      channel.presence.enter({ userId: user.id, name: user.fullName })
+    let mounted = true
 
-      channel.subscribe('chat', (msg) => setMessages(m => [...m, { type: 'chat', ...msg.data }]))
-      channel.subscribe('system', (msg) => setMessages(m => [...m, { type: 'system', ...msg.data }]))
-      channel.subscribe('dice', (msg) => setMessages(m => [...m, { type: 'dice', ...msg.data }]))
+    (async () => {
+      console.debug('[ChatPanel] mount for', channelName)
+      try {
+        client = createAblyRealtime(() => getToken(), channelName)
+        await client.connection.once('connected')
 
-      const page = await channel.history({ limit: 25 })
-      const history = []
-      page.items.reverse().forEach(i => history.push({ type: i.name, ...i.data }))
-      setMessages(history)
+        if (!mounted) {
+          // If the effect was cleaned up while we were connecting, close the client
+          try { client.close() } catch (e) {/* ignore */}
+          return
+        }
 
-      clientRef.current = client
-      channelRef.current = channel
+        channel = client.channels.get(channelName)
+        try {
+          await channel.presence.enter({ userId: user.id, name: user.fullName })
+        } catch (e) {
+          // presence enter can fail if not authorized; don't crash the UI
+          console.warn('[ChatPanel] presence.enter failed', e)
+        }
+
+        try {
+          channel.subscribe('chat', (msg) => setMessages(m => [...m, { type: 'chat', ...msg.data }]))
+          channel.subscribe('system', (msg) => setMessages(m => [...m, { type: 'system', ...msg.data }]))
+          channel.subscribe('dice', (msg) => setMessages(m => [...m, { type: 'dice', ...msg.data }]))
+        } catch (e) {
+          console.warn('[ChatPanel] subscribe failed', e)
+        }
+
+        try {
+          const page = await channel.history({ limit: 25 })
+          const history = []
+          page.items.reverse().forEach(i => history.push({ type: i.name, ...i.data }))
+          setMessages(history)
+        } catch (e) {
+          console.warn('[ChatPanel] history fetch failed', e)
+        }
+
+        clientRef.current = client
+        channelRef.current = channel
+      } catch (err) {
+        console.error('[ChatPanel] connect error', err)
+      }
     })()
 
     return () => {
-      if(channelRef.current){ channelRef.current.presence.leave() }
-      if(clientRef.current){ clientRef.current.close() }
+      mounted = false
+      console.debug('[ChatPanel] unmount for', channelName)
+      try {
+        if (channelRef.current) { channelRef.current.presence.leave() }
+      } catch (e) { /* ignore */ }
+      try {
+        if (clientRef.current) { clientRef.current.close() }
+      } catch (e) { /* ignore */ }
+      clientRef.current = null
+      channelRef.current = null
     }
   }, [channelName, getToken, user])
 
