@@ -56,7 +56,7 @@ export default function CampaignMenu({ value, onChange }){
       <div className="space-y-2">
         {campaigns.length === 0 && <p className="text-sm opacity-70">No campaigns yet.</p>}
         {campaigns.map(c => (
-          <div key={c.id} onClick={() => onChange && onChange(c.id)} className="p-2 rounded border flex items-center justify-between cursor-pointer hover:bg-gray-50">
+          <div key={c.id} onClick={() => { if (typeof onChange === 'function') onChange(c.id) }} className="p-2 rounded border flex items-center justify-between cursor-pointer hover:bg-gray-50">
             <div>
               <div className="text-sm font-medium">{c.name}</div>
               <div className="text-xs opacity-60">campaign:{c.id}</div>
