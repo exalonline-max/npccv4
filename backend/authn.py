@@ -22,9 +22,23 @@ def require_user():
     token = auth.split(" ", 1)[1]
     try:
         key = _jwks().get_signing_key_from_jwt(token).key
-    except Exception as e:
-        # PyJWKClient will raise for malformed tokens or when it cannot find a key.
-        abort(401, f"Invalid token (key lookup failed): {e}")
+    except Exception:
+        # Possible causes: JWKS rotated or wrong JWKS URL. Try refreshing the JWKS
+        # client once and retry. If that fails, include the token header 'kid' in
+        # the 401 message to aid debugging (no token body is logged).
+        try:
+            # force refresh
+            global _jwks_client, _cache
+            _jwks_client = PyJWKClient(settings.CLERK_JWKS_URL)
+            _cache["jwks_at"] = time.time()
+            key = _jwks_client.get_signing_key_from_jwt(token).key
+        except Exception:
+            try:
+                hdr = jwt.get_unverified_header(token)
+                kid = hdr.get('kid')
+            except Exception:
+                kid = None
+            abort(401, f"Invalid token (key lookup failed): Unable to find a signing key that matches: {kid}")
 
     try:
         claims = jwt.decode(

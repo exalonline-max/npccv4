@@ -9,6 +9,7 @@ from .config import settings
 from .routes.health import bp as health_bp
 from .realtime import bp as realtime_bp
 from .dice import bp as dice_bp
+from .campaigns import bp as campaigns_bp
 
 app = Flask(__name__)
 
@@ -44,6 +45,7 @@ CORS(
 app.register_blueprint(health_bp)
 app.register_blueprint(realtime_bp)
 app.register_blueprint(dice_bp)
+app.register_blueprint(campaigns_bp)
 
 @app.route("/api/<path:subpath>", methods=["OPTIONS"])
 def _preflight_catchall(subpath):

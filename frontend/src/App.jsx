@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 
 function Nav() {
   return (
     <nav className="hidden md:flex items-center gap-6 text-sm opacity-90">
-      <a href="/app/campaigns" className="hover:underline">Campaigns</a>
-      <a href="/app/character" className="hover:underline">Character Sheet</a>
-      <a href="/app/preferences" className="hover:underline">Preferences</a>
+      <Link to="/app/campaigns" className="hover:underline">Campaigns</Link>
+      <Link to="/app/character" className="hover:underline">Character Sheet</Link>
+      <Link to="/app/preferences" className="hover:underline">Preferences</Link>
     </nav>
   )
 }
@@ -61,58 +62,71 @@ function DevEnvBadge(){
 
 import ChatPanel from './chat/ChatPanel'
 import CampaignMenu from './components/CampaignMenu'
+import CampaignsPage from './pages/CampaignsPage'
 
 export default function App(){
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-emerald-50">
-      <Header />
-      <main className="mx-auto max-w-6xl px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-  {/* Left: Chat / Main content */}
-        <section className="lg:col-span-8">
-          <div className="rounded-xl border bg-white shadow-sm">
-            <div className="px-4 py-3 border-b flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-semibold">Campaign Chat</h2>
-    <p className="text-xs opacity-70">Channel: {`campaign:${localStorage.getItem('npc:selectedCampaign') || 'none'}`}</p>
-              </div>
+    <BrowserRouter>
+      <div className="min-h-screen bg-gradient-to-b from-white to-emerald-50">
+        <Header />
+        <main className="mx-auto max-w-6xl px-4 py-6">
+          <Routes>
+            <Route path="/app/campaigns" element={<CampaignsPage />} />
+            <Route path="/app/*" element={<AppShell />} />
+            <Route path="/" element={<AppShell />} />
+          </Routes>
+        </main>
+        <DevEnvBadge />
+      </div>
+    </BrowserRouter>
+  )
+}
+
+function AppShell(){
+  return (
+    <main className="mx-auto max-w-6xl px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Left: Chat / Main content */}
+      <section className="lg:col-span-8">
+        <div className="rounded-xl border bg-white shadow-sm">
+          <div className="px-4 py-3 border-b flex items-center justify-between">
+            <div>
+              <p className="text-xs opacity-70">Channel: {`campaign:${localStorage.getItem('npc:selectedCampaign') || 'none'}`}</p>
             </div>
-            <div className="p-4">
-              <SignedIn>
-    <CampaignMenuWrapper />
-              </SignedIn>
-              <SignedOut>
-                <p className="text-sm opacity-80">Please sign in to join campaign chat.</p>
-              </SignedOut>
-            </div>
           </div>
-        </section>
-
-        {/* Right: Sidebar placeholders */}
-        <aside className="lg:col-span-4 space-y-6">
-          <div className="rounded-xl border bg-white shadow-sm p-4">
-            <h3 className="text-sm font-semibold mb-2">Active Campaign</h3>
-            <ActiveCampaignPanel />
+          <div className="p-4">
+            <SignedIn>
+              <CampaignMenuWrapper />
+            </SignedIn>
+            <SignedOut>
+              <p className="text-sm opacity-80">Please sign in to join campaign chat.</p>
+            </SignedOut>
           </div>
+        </div>
+      </section>
 
-          <div className="rounded-xl border bg-white shadow-sm p-4">
-            <h3 className="text-sm font-semibold mb-2">Modules</h3>
-            <ul className="text-sm opacity-80 space-y-2 pl-0">
-              <li className="p-2 rounded border bg-gray-50">Quests</li>
-              <li className="p-2 rounded border bg-gray-50">Achievements</li>
-              <li className="p-2 rounded border bg-gray-50">Worldmap</li>
-              <li className="p-2 rounded border bg-gray-50">Translator</li>
-            </ul>
-          </div>
+      {/* Right: Sidebar placeholders */}
+      <aside className="lg:col-span-4 space-y-6">
+        <div className="rounded-xl border bg-white shadow-sm p-4">
+          <h3 className="text-sm font-semibold mb-2">Active Campaign</h3>
+          <ActiveCampaignPanel />
+        </div>
 
-          <div className="rounded-xl border bg-white shadow-sm p-4">
-            <h3 className="text-sm font-semibold mb-2">Widgets</h3>
-            <p className="text-sm opacity-80">Design quick toggles & counters (e.g., Rage, Transformations). Coming soon.</p>
-          </div>
-        </aside>
-      </main>
+        <div className="rounded-xl border bg-white shadow-sm p-4">
+          <h3 className="text-sm font-semibold mb-2">Modules</h3>
+          <ul className="text-sm opacity-80 space-y-2 pl-0">
+            <li className="p-2 rounded border bg-gray-50">Quests</li>
+            <li className="p-2 rounded border bg-gray-50">Achievements</li>
+            <li className="p-2 rounded border bg-gray-50">Worldmap</li>
+            <li className="p-2 rounded border bg-gray-50">Translator</li>
+          </ul>
+        </div>
 
-      <DevEnvBadge />
-    </div>
+        <div className="rounded-xl border bg-white shadow-sm p-4">
+          <h3 className="text-sm font-semibold mb-2">Widgets</h3>
+          <p className="text-sm opacity-80">Design quick toggles & counters (e.g., Rage, Transformations). Coming soon.</p>
+        </div>
+      </aside>
+    </main>
   )
 }
 
