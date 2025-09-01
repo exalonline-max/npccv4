@@ -77,7 +77,11 @@ export default function ChatPanel({ campaignId }){
     e.preventDefault()
     const ch = channelRef.current
     if(!ch || !text.trim()) return
-    await ch.publish('chat', { user: user.fullName || user.username, text: text.trim(), ts: new Date().toISOString() })
+    if (typeof ch.publish === 'function') {
+      await ch.publish('chat', { user: user.fullName || user.username, text: text.trim(), ts: new Date().toISOString() })
+    } else {
+      console.warn('[ChatPanel] channel.publish is not a function', ch)
+    }
     setText("")
   }
 
