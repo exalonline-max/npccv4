@@ -8,11 +8,14 @@ export default function CampaignMenu({ value, onChange }){
 
   useEffect(() => {
     (async () => {
+      // Normalize API base to avoid double /api when env already includes it
+      const rawBase = import.meta.env.VITE_API_BASE || ''
+      const base = rawBase.replace(/\/+$/,'').replace(/\/api$/i, '')
+      const apiUrl = base ? `${base}/api/campaigns` : '/api/campaigns'
+
       // Try server-side first
       try{
-        const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/campaigns`, {
-          headers: { 'Accept': 'application/json' }
-        })
+        const res = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } })
         if(res.ok){
           const data = await res.json()
           setCampaigns(data)
@@ -32,9 +35,12 @@ export default function CampaignMenu({ value, onChange }){
   const create = async () => {
     if(!newName.trim()) return
     // Try server-side create
-    try{
-      const token = await getToken({ template: 'backend' }).catch(()=>null)
-      const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/campaigns`, {
+  try{
+  const rawBase = import.meta.env.VITE_API_BASE || ''
+  const base = rawBase.replace(/\/+$/,'').replace(/\/api$/i, '')
+  const apiUrl = base ? `${base}/api/campaigns` : '/api/campaigns'
+  const token = await getToken({ template: 'backend' }).catch(()=>null)
+  const res = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -60,9 +66,12 @@ export default function CampaignMenu({ value, onChange }){
   }
 
   const join = async (id) => {
-    try{
-      const token = await getToken({ template: 'backend' }).catch(()=>null)
-      await fetch(`${import.meta.env.VITE_API_BASE}/api/campaigns/${id}/join`, {
+  try{
+  const rawBase = import.meta.env.VITE_API_BASE || ''
+  const base = rawBase.replace(/\/+$/,'').replace(/\/api$/i, '')
+  const apiUrl = base ? `${base}/api/campaigns/${id}/join` : `/api/campaigns/${id}/join`
+  const token = await getToken({ template: 'backend' }).catch(()=>null)
+  await fetch(apiUrl, {
         method: 'POST',
         headers: {
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
