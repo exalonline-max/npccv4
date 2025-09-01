@@ -9,9 +9,14 @@ export default function CampaignMenu({ value, onChange }){
   useEffect(() => {
     (async () => {
       // Normalize API base to avoid double /api when env already includes it
-      const rawBase = import.meta.env.VITE_API_BASE || ''
-      const base = rawBase.replace(/\/+$/,'').replace(/\/api$/i, '')
-      const apiUrl = base ? `${base}/api/campaigns` : '/api/campaigns'
+  const rawBase = import.meta.env.VITE_API_BASE || ''
+  // Defensive fallback: if no build-time API base is provided, prefer the
+  // currently known-working backend hostname. This only applies when the
+  // env isn't set (e.g., forget to configure Render). If Render is set,
+  // it will take precedence.
+  const fallbackHost = 'https://npcchatter-backend-wll0.onrender.com'
+  const base = (rawBase || fallbackHost).replace(/\/+$/,'').replace(/\/api$/i, '')
+  const apiUrl = `${base}/api/campaigns`
 
       // Try server-side first
       try{
@@ -37,8 +42,9 @@ export default function CampaignMenu({ value, onChange }){
     // Try server-side create
   try{
   const rawBase = import.meta.env.VITE_API_BASE || ''
-  const base = rawBase.replace(/\/+$/,'').replace(/\/api$/i, '')
-  const apiUrl = base ? `${base}/api/campaigns` : '/api/campaigns'
+  const fallbackHost = 'https://npcchatter-backend-wll0.onrender.com'
+  const base = (rawBase || fallbackHost).replace(/\/+$/,'').replace(/\/api$/i, '')
+  const apiUrl = `${base}/api/campaigns`
   const token = await getToken({ template: 'backend' }).catch(()=>null)
   const res = await fetch(apiUrl, {
         method: 'POST',
@@ -68,8 +74,9 @@ export default function CampaignMenu({ value, onChange }){
   const join = async (id) => {
   try{
   const rawBase = import.meta.env.VITE_API_BASE || ''
-  const base = rawBase.replace(/\/+$/,'').replace(/\/api$/i, '')
-  const apiUrl = base ? `${base}/api/campaigns/${id}/join` : `/api/campaigns/${id}/join`
+  const fallbackHost = 'https://npcchatter-backend-wll0.onrender.com'
+  const base = (rawBase || fallbackHost).replace(/\/+$/,'').replace(/\/api$/i, '')
+  const apiUrl = `${base}/api/campaigns/${id}/join`
   const token = await getToken({ template: 'backend' }).catch(()=>null)
   await fetch(apiUrl, {
         method: 'POST',

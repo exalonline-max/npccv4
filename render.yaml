@@ -48,7 +48,11 @@ services:
       - key: VITE_CLERK_PUBLISHABLE_KEY
         sync: false
       - key: VITE_API_BASE
-        sync: false
+  # Build-time base URL the frontend will use to call the backend API.
+  # Set to the backend service hostname that currently returns the correct CORS
+  # and API responses. If your Render backend service URL differs, update it.
+  value: https://npcchatter-backend-wll0.onrender.com
+  sync: false
       - key: VITE_ABLY_PUBLISHABLE_KEY
         sync: false
       - key: VITE_ABLY_AUTH_URL
