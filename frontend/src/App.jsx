@@ -1,20 +1,44 @@
 import React, { useState, useEffect } from 'react'
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link, NavLink } from 'react-router-dom'
 
-function Nav() {
+function Nav({ open = false, onLinkClick = () => {} }) {
+  const linkClass = ({ isActive }) => (isActive ? 'underline font-medium' : 'hover:underline')
+
   return (
-    <nav className="hidden md:flex items-center gap-6 text-sm opacity-90">
-      <Link to="/app/campaigns" className="hover:underline">Campaigns</Link>
-      <Link to="/app/character" className="hover:underline">Character Sheet</Link>
-      <Link to="/app/preferences" className="hover:underline">Preferences</Link>
-    </nav>
+    <>
+      {/* Desktop nav */}
+      <nav className="hidden md:flex items-center gap-6 text-sm opacity-90">
+        <NavLink to="/" className={linkClass} onClick={onLinkClick}>Home</NavLink>
+        <NavLink to="/app/campaigns" className={linkClass} onClick={onLinkClick}>Campaigns</NavLink>
+        <NavLink to="/app/character" className={linkClass} onClick={onLinkClick}>Character Sheet</NavLink>
+        <NavLink to="/app/preferences" className={linkClass} onClick={onLinkClick}>Preferences</NavLink>
+      </nav>
+
+      {/* Mobile nav (shows when open=true) */}
+      <nav className={`md:hidden ${open ? 'block' : 'hidden'} mt-2 border-t pt-2`}> 
+        <ul className="flex flex-col gap-2 text-sm px-2">
+          <li>
+            <NavLink to="/" className={({ isActive }) => (isActive ? 'block px-3 py-2 rounded bg-gray-100 font-medium' : 'block px-3 py-2 rounded hover:bg-gray-50')} onClick={onLinkClick}>Home</NavLink>
+          </li>
+          <li>
+            <NavLink to="/app/campaigns" className={({ isActive }) => (isActive ? 'block px-3 py-2 rounded bg-gray-100 font-medium' : 'block px-3 py-2 rounded hover:bg-gray-50')} onClick={onLinkClick}>Campaigns</NavLink>
+          </li>
+          <li>
+            <NavLink to="/app/character" className={({ isActive }) => (isActive ? 'block px-3 py-2 rounded bg-gray-100 font-medium' : 'block px-3 py-2 rounded hover:bg-gray-50')} onClick={onLinkClick}>Character Sheet</NavLink>
+          </li>
+          <li>
+            <NavLink to="/app/preferences" className={({ isActive }) => (isActive ? 'block px-3 py-2 rounded bg-gray-100 font-medium' : 'block px-3 py-2 rounded hover:bg-gray-50')} onClick={onLinkClick}>Preferences</NavLink>
+          </li>
+        </ul>
+      </nav>
+    </>
   )
 }
 
 function Brand() {
   return (
-    <div className="flex items-center gap-3">
+    <Link to="/" aria-label="Home" className="flex items-center gap-3">
       <div className="w-8 h-8 rounded bg-gradient-to-br from-emerald-500 to-cyan-500 grid place-items-center text-white font-black">N</div>
       <div>
         <div className="flex items-center gap-2">
@@ -23,18 +47,44 @@ function Brand() {
         </div>
         <p className="text-xs opacity-70 -mt-0.5">Tools for DMs & Players</p>
       </div>
-    </div>
+    </Link>
   )
 }
 
 function Header() {
   const { user } = useUser()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
   return (
     <header className="sticky top-0 z-10 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-        <Brand />
-        <Nav />
         <div className="flex items-center gap-3">
+          <Brand />
+        </div>
+
+        <div className="flex-1 flex justify-center">
+          <Nav open={mobileOpen} onLinkClick={() => setMobileOpen(false)} />
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Mobile toggle */}
+          <button
+            className="md:hidden p-2 rounded hover:bg-gray-100"
+            onClick={() => setMobileOpen(v => !v)}
+            aria-expanded={mobileOpen}
+            aria-label="Toggle navigation"
+          >
+            {mobileOpen ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+            )}
+          </button>
+
           <SignedOut>
             <SignInButton>
               <button className="px-3 py-1.5 rounded border hover:bg-gray-50 text-sm">Sign in</button>
@@ -45,6 +95,11 @@ function Header() {
             <UserButton afterSignOutUrl="/" />
           </SignedIn>
         </div>
+      </div>
+
+      {/* Mobile nav container placed after header content for layout flow */}
+      <div className="mx-auto max-w-6xl px-4">
+        <Nav open={mobileOpen} onLinkClick={() => setMobileOpen(false)} />
       </div>
     </header>
   )
