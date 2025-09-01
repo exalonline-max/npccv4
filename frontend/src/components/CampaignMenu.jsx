@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useAuth } from '@clerk/clerk-react'
 
 export default function CampaignMenu({ value, onChange }){
   const [campaigns, setCampaigns] = useState([])
-  const [newName, setNewName] = useState('')
-  const { getToken } = useAuth()
 
   useEffect(() => {
     (async () => {
@@ -51,74 +48,18 @@ export default function CampaignMenu({ value, onChange }){
 
   useEffect(() => { localStorage.setItem('npc:campaigns', JSON.stringify(campaigns)) }, [campaigns])
 
-  const create = async () => {
-    if(!newName.trim()) return
-    // Try server-side create
-  try{
-  const rawBase = import.meta.env.VITE_API_BASE || ''
-  const fallbackHost = 'https://npcchatter-backend-wll0.onrender.com'
-  const base = (rawBase || fallbackHost).replace(/\/+$/,'').replace(/\/api$/i, '')
-  const apiUrl = `${base}/api/campaigns`
-  const token = await getToken({ template: 'backend' }).catch(()=>null)
-  const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ name: newName.trim() })
-      })
-      if(res.ok){
-        const created = await res.json()
-        setCampaigns(c => [created, ...c])
-        setNewName('')
-        onChange && onChange(created.id)
-        return
-      }
-    }catch(e){ /* ignore -> fallback */ }
-
-    // fallback local
-    const id = Math.random().toString(36).slice(2,9)
-    const entry = { id, name: newName.trim() }
-    setCampaigns(c => [entry, ...c])
-    setNewName('')
-    onChange && onChange(entry.id)
-  }
-
-  const join = async (id) => {
-  try{
-  const rawBase = import.meta.env.VITE_API_BASE || ''
-  const fallbackHost = 'https://npcchatter-backend-wll0.onrender.com'
-  const base = (rawBase || fallbackHost).replace(/\/+$/,'').replace(/\/api$/i, '')
-  const apiUrl = `${base}/api/campaigns/${id}/join`
-  const token = await getToken({ template: 'backend' }).catch(()=>null)
-  await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        }
-      })
-    }catch(e){ /* ignore */ }
-    onChange && onChange(id)
-  }
+  // Note: creation/joining flows removed — one chat per campaign. Selecting a
+  // campaign from the list grants access to the chat (if the user is a member).
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-2">
-        <input className="input input-sm flex-1" value={newName} onChange={e=>setNewName(e.target.value)} placeholder="New campaign name" />
-        <button className="btn btn-sm btn-primary" onClick={create}>Create</button>
-      </div>
-
       <div className="space-y-2">
-        {campaigns.length === 0 && <p className="text-sm opacity-70">No campaigns yet. Create one to get started.</p>}
+        {campaigns.length === 0 && <p className="text-sm opacity-70">No campaigns yet.</p>}
         {campaigns.map(c => (
-          <div key={c.id} className="p-2 rounded border flex items-center justify-between">
+          <div key={c.id} onClick={() => onChange && onChange(c.id)} className="p-2 rounded border flex items-center justify-between cursor-pointer hover:bg-gray-50">
             <div>
               <div className="text-sm font-medium">{c.name}</div>
               <div className="text-xs opacity-60">campaign:{c.id}</div>
-            </div>
-            <div>
-              <button className="btn btn-xs" onClick={() => join(c.id)}>Join</button>
             </div>
           </div>
         ))}

@@ -20,7 +20,7 @@ function Brand() {
           <h1 className="text-xl font-bold tracking-tight">NPC Chatter</h1>
           <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">beta</span>
         </div>
-        <p className="text-xs opacity-70 -mt-0.5">AI tools for DMs & Players</p>
+        <p className="text-xs opacity-70 -mt-0.5">Tools for DMs & Players</p>
       </div>
     </div>
   )
@@ -95,11 +95,12 @@ export default function App(){
           </div>
 
           <div className="rounded-xl border bg-white shadow-sm p-4">
-            <h3 className="text-sm font-semibold mb-2">Character Snapshot</h3>
-            <ul className="text-sm opacity-80 space-y-1 list-disc pl-4">
-              <li>Name, Class, Level</li>
-              <li>HP, AC, Speed</li>
-              <li>Proficiency, Passive Perception</li>
+            <h3 className="text-sm font-semibold mb-2">Modules</h3>
+            <ul className="text-sm opacity-80 space-y-2 pl-0">
+              <li className="p-2 rounded border bg-gray-50">Quests</li>
+              <li className="p-2 rounded border bg-gray-50">Achievements</li>
+              <li className="p-2 rounded border bg-gray-50">Worldmap</li>
+              <li className="p-2 rounded border bg-gray-50">Translator</li>
             </ul>
           </div>
 
