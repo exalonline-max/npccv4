@@ -62,9 +62,7 @@ function Header() {
           <Brand />
         </div>
 
-        <div className="flex-1 flex justify-center">
-          <Nav open={mobileOpen} onLinkClick={() => setMobileOpen(false)} />
-        </div>
+  <div className="flex-1" />
 
         <div className="flex items-center gap-3">
           {/* Mobile toggle */}
@@ -138,6 +136,24 @@ export default function App(){
 }
 
 function AppShell(){
+  const navigate = (typeof window !== 'undefined' ? null : null)
+  // We'll use useEffect + window navigation to avoid importing router hooks at top-level in case
+  // this file is evaluated outside of a Router in some tests. When inside the Router, useHistory
+  // is available — but keep a simple client-side redirect here.
+  useEffect(() => {
+    try {
+      const sel = localStorage.getItem('npc:selectedCampaign')
+      if (!sel) {
+        // Only redirect if we're not already on the campaigns page
+        if (!window.location.pathname.startsWith('/app/campaigns')) {
+          window.location.href = '/app/campaigns'
+        }
+      }
+    } catch (e) {
+      // ignore (e.g., SSR or localStorage not available)
+    }
+  }, [])
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Left: Chat / Main content */}
