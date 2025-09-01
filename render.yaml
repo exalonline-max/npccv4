@@ -30,7 +30,7 @@ services:
       - key: CLERK_JWKS_URL
         value: https://clerk.npcchatter.com/.well-known/jwks.json
       - key: CLERK_JWKS_URL_ALT
-        value: ""
+  value: https://growing-badger-13.clerk.accounts.dev/.well-known/jwks.json
       - key: ABLY_API_KEY
         sync: false
       - key: CLERK_SECRET_KEY
