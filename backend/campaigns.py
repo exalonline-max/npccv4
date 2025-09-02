@@ -60,6 +60,20 @@ def _ensure_tables():
         except Exception:
             # Non-fatal: some DBs may not support IF NOT EXISTS for index creation
             pass
+        # Attempt to add missing columns (safe for Postgres with IF NOT EXISTS). This
+        # helps when the table was created earlier and SQLAlchemy's create_all won't
+        # alter existing tables to add new columns.
+        try:
+            with engine.begin() as conn:
+                # Add owner_id and timestamp columns if they don't exist
+                conn.execute(text("ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS owner_id TEXT"))
+                conn.execute(text("ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+                conn.execute(text("ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP"))
+                # Ensure user_settings table exists (some DBs won't have been created earlier)
+                conn.execute(text("CREATE TABLE IF NOT EXISTS user_settings (user_id TEXT PRIMARY KEY, active_campaign_id TEXT)"))
+        except Exception:
+            # Non-fatal: tolerate DBs that don't support IF NOT EXISTS or need migrations
+            pass
     except Exception:
         # Don't crash app if DB not reachable at startup; endpoints will surface errors later
         pass
