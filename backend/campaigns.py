@@ -125,6 +125,8 @@ def update_campaign(cid: str):
                 abort(404, "Campaign not found")
             return jsonify(dict(row._mapping))
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         abort(500, f"DB error: {e}")
 
 @bp.get("/api/campaigns/<cid>/members")
