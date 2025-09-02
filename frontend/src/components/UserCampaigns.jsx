@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CampaignEditModal from './CampaignEditModal';
 
-export default function UserCampaigns({ campaigns, activeId, onSetActive, onEditCampaign, onOpen }) {
+export default function UserCampaigns({ campaigns, activeId, onSetActive, onEditCampaign, onOpen, onLeave }) {
   const [menuOpen, setMenuOpen] = useState({});
   const [editOpen, setEditOpen] = useState(false);
   const [editCampaign, setEditCampaign] = useState(null);
@@ -13,13 +13,13 @@ export default function UserCampaigns({ campaigns, activeId, onSetActive, onEdit
   async function handleLeave(id) {
     setMenuOpen(prev => ({ ...prev, [id]: false }));
     try {
-      const token = await (await import('react')).useContext?.(() => null); // placeholder to satisfy lint; token obtained by parent
-      // The actual leave call is performed by the parent via event or implement a shared api call here
-      // For now, call the global API directly
-      const { leaveCampaign, getCampaigns, getCampaignMembers } = await import('../utils/api');
-      // get token via Clerk? We rely on credentials: 'include' so token header not strictly needed here
+      if (typeof onLeave === 'function') {
+        await onLeave(id);
+        return;
+      }
+      // Fallback: call API directly (no token; relies on credentials: 'include')
+      const { leaveCampaign } = await import('../utils/api');
       await leaveCampaign(id);
-      // Refresh UI by asking parent to reload — emit a custom event
       window.dispatchEvent(new CustomEvent('npc:campaigns:refresh'));
     } catch (e) {
       console.error('Leave failed', e);

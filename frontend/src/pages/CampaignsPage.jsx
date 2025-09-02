@@ -24,7 +24,7 @@ export default function CampaignsPage() {
   const [showGame, setShowGame] = useState(false);
 
   useEffect(() => {
-    async function refreshLists() {
+  async function refreshLists() {
       setLoading(true);
       const all = await getCampaigns();
       if (user) {
@@ -62,6 +62,16 @@ export default function CampaignsPage() {
     }
     loadActive();
   }, [user]);
+
+  // Keep activeCampaign object in sync when activeId or userCampaigns change
+  useEffect(() => {
+    if (!activeId) {
+      setActiveCampaign(null);
+      return;
+    }
+    const found = userCampaigns.find(c => c.id === activeId);
+    if (found) setActiveCampaign(found);
+  }, [activeId, userCampaigns]);
 
   async function handleJoin(id) {
     setLoading(true);
@@ -131,7 +141,12 @@ export default function CampaignsPage() {
       description: updated.description,
       token
     });
-    await updateCampaign(updated.id, { name: updated.name, description: updated.description }, token);
+    try {
+      await updateCampaign(updated.id, { name: updated.name, description: updated.description }, token);
+    } catch (e) {
+      console.error('Update failed', e);
+      alert('Failed to update campaign');
+    }
     // Refresh lists after update
     const all = await getCampaigns();
     if (user) {
@@ -156,6 +171,39 @@ export default function CampaignsPage() {
     setActiveId(campaign.id);
     setActiveCampaign(campaign);
     setShowGame(true);
+  }
+
+  async function handleLeave(id) {
+    setLoading(true);
+    try {
+      const token = await getToken();
+      const { leaveCampaign } = await import('../utils/api');
+      await leaveCampaign(id, token);
+      // Refresh lists
+      const all = await getCampaigns();
+      if (user) {
+        const userId = user.id;
+        const joined = [];
+        for (const c of all) {
+          const members = await getCampaignMembers(c.id);
+          if (members.includes(userId)) joined.push({ ...c, members });
+        }
+        const joinedIds = new Set(joined.map(c => c.id));
+        setUserCampaigns(joined);
+        setCampaigns(all.filter(c => !joinedIds.has(c.id)));
+        // If the active campaign was the one left, clear it locally
+        if (activeId === id) {
+          setActiveId(null);
+          setActiveCampaign(null);
+        }
+      } else {
+        setCampaigns(all);
+      }
+    } catch (e) {
+      console.error('Leave failed', e);
+      alert('Failed to leave campaign');
+    }
+    setLoading(false);
   }
 
   return (
