@@ -65,4 +65,3 @@ import {
       </main>
     </div>
   );
-}
