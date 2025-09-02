@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: npcchatter-simple-ui
+    runtime: static
+    rootDir: frontend
+    autoDeploy: true
+    buildCommand: ''
+    staticPublishPath: .
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
