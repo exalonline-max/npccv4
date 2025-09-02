@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import CampaignEditModal from './CampaignEditModal';
 
-export default function UserCampaigns({ campaigns, activeId, onSetActive }) {
+export default function UserCampaigns({ campaigns, activeId, onSetActive, onEditCampaign }) {
   const [menuOpen, setMenuOpen] = useState({});
+  const [editOpen, setEditOpen] = useState(false);
+  const [editCampaign, setEditCampaign] = useState(null);
 
   function toggleMenu(id) {
     setMenuOpen(prev => ({ ...prev, [id]: !prev[id] }));
@@ -14,13 +17,26 @@ export default function UserCampaigns({ campaigns, activeId, onSetActive }) {
   }
 
   function handleEdit(id) {
-    // TODO: Implement edit campaign logic
-    alert(`Edit campaign ${id}`);
+    const campaign = campaigns.find(c => c.id === id);
+    setEditCampaign(campaign);
+    setEditOpen(true);
     setMenuOpen(prev => ({ ...prev, [id]: false }));
+  }
+
+  function handleEditSave(updated) {
+    setEditOpen(false);
+    setEditCampaign(null);
+    if (onEditCampaign) onEditCampaign(updated);
   }
 
   return (
     <div className="w-full max-w-2xl mx-auto mt-6">
+      <CampaignEditModal
+        campaign={editCampaign}
+        open={editOpen}
+        onClose={() => { setEditOpen(false); setEditCampaign(null); }}
+        onSave={handleEditSave}
+      />
       <h2 className="text-lg font-bold mb-2">Your Campaigns</h2>
       <div className="flex flex-col gap-2">
         {campaigns.map(campaign => {

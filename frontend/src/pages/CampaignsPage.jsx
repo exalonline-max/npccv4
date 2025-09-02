@@ -15,6 +15,7 @@ export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState([]);
   const [userCampaigns, setUserCampaigns] = useState([]);
   const [activeId, setActiveId] = useState(null);
+  const [activeCampaign, setActiveCampaign] = useState(null);
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
   const { getToken } = useAuth();
@@ -65,12 +66,21 @@ export default function CampaignsPage() {
   function handleSetActive(id) {
     setLoading(true);
     setActiveId(id);
+    const campaign = userCampaigns.find(c => c.id === id);
+    setActiveCampaign(campaign);
+    // TODO: Save active campaign to user profile via backend
     setTimeout(() => setLoading(false), 500); // Simulate loading for UI feedback
+  }
+
+  function handleEditCampaign(updated) {
+    // TODO: Save updated campaign to backend
+    setUserCampaigns(userCampaigns.map(c => c.id === updated.id ? updated : c));
+    setCampaigns(campaigns.map(c => c.id === updated.id ? updated : c));
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-yellow-200 to-yellow-50 relative">
-      <Topbar />
+  <Topbar activeCampaign={activeCampaign} />
       <main className="px-2 py-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <section className="bg-white rounded-lg shadow-lg p-4 border border-yellow-900 flex flex-col items-center">
@@ -86,7 +96,7 @@ export default function CampaignsPage() {
           <section className="bg-white rounded-lg shadow-lg p-4 border border-blue-900 flex flex-col items-center">
             <h2 className="text-2xl font-extrabold text-blue-700 mb-2 tracking-wider">Play</h2>
             <p className="text-sm text-blue-900 mb-4 italic">Your active adventures</p>
-            <UserCampaigns campaigns={userCampaigns} activeId={activeId} onSetActive={handleSetActive} />
+            <UserCampaigns campaigns={userCampaigns} activeId={activeId} onSetActive={handleSetActive} onEditCampaign={handleEditCampaign} />
           </section>
         </div>
         {loading && (
