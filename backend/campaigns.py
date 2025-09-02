@@ -1,7 +1,7 @@
 # Leading duplicated route removed; blueprint/imports defined below
 from flask import Blueprint, request, jsonify, abort
 from sqlalchemy import (
-    Table, Column, String, MetaData, create_engine, select, PrimaryKeyConstraint
+    Table, Column, String, MetaData, create_engine, select, PrimaryKeyConstraint, DateTime, text
 )
 from .config import settings
 from .authn import require_user
@@ -20,6 +20,8 @@ campaigns_table = Table(
     Column("avatar", String, nullable=True),
     # Owner ID (Clerk user id). Nullable for existing rows; new creates will set this.
     Column("owner_id", String, nullable=True),
+    Column("created_at", DateTime, server_default=text('CURRENT_TIMESTAMP')),
+    Column("updated_at", DateTime, nullable=True),
 )
 
 campaign_members_table = Table(
@@ -51,6 +53,13 @@ def _ensure_tables():
     try:
         engine = _engine()
         metadata.create_all(engine)
+        # Ensure an index on campaign_members.user_id for faster membership queries
+        try:
+            with engine.begin() as conn:
+                conn.execute(text('CREATE INDEX IF NOT EXISTS ix_campaign_members_user_id ON campaign_members (user_id)'))
+        except Exception:
+            # Non-fatal: some DBs may not support IF NOT EXISTS for index creation
+            pass
     except Exception:
         # Don't crash app if DB not reachable at startup; endpoints will surface errors later
         pass
@@ -93,7 +102,7 @@ def update_campaign(cid: str):
             result = conn.execute(
                 campaigns_table.update()
                 .where(campaigns_table.c.id == cid)
-                .values(**update_values)
+                .values(**{**update_values, 'updated_at': text('CURRENT_TIMESTAMP')})
             )
             # If nothing was updated, something unexpected happened
             if result.rowcount == 0:
@@ -107,6 +116,8 @@ def update_campaign(cid: str):
                     campaigns_table.c.description,
                     campaigns_table.c.avatar,
                     campaigns_table.c.owner_id,
+                    campaigns_table.c.created_at,
+                    campaigns_table.c.updated_at,
                 ).where(campaigns_table.c.id == cid)
             )
             row = res.fetchone()
@@ -168,6 +179,7 @@ def create_campaign():
                 description=description,
                 avatar=avatar,
                 owner_id=owner_id,
+                created_at=text('CURRENT_TIMESTAMP'),
             ))
         return jsonify({"id": cid, "name": name, "description": description, "avatar": avatar})
     except Exception as e:
