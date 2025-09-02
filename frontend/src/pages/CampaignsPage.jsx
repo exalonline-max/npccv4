@@ -22,10 +22,9 @@ export default function CampaignsPage() {
   const { getToken } = useAuth();
 
   useEffect(() => {
-    async function load() {
+    async function refreshLists() {
       setLoading(true);
       const all = await getCampaigns();
-      setCampaigns(all);
       if (user) {
         const userId = user.id;
         const joined = [];
@@ -33,25 +32,38 @@ export default function CampaignsPage() {
           const members = await getCampaignMembers(c.id);
           if (members.includes(userId)) joined.push({ ...c, members });
         }
+        const joinedIds = new Set(joined.map(c => c.id));
         setUserCampaigns(joined);
+        // Only show campaigns the user has NOT already joined
+        setCampaigns(all.filter(c => !joinedIds.has(c.id)));
+      } else {
+        setCampaigns(all);
+        setUserCampaigns([]);
       }
       setLoading(false);
     }
-    load();
+    refreshLists();
   }, [user]);
 
   async function handleJoin(id) {
     setLoading(true);
     const token = await getToken();
     await joinCampaign(id, token);
+    // Refresh lists so the joined campaign is removed from available list
     const all = await getCampaigns();
-    const userId = user.id;
-    const joined = [];
-    for (const c of all) {
-      const members = await getCampaignMembers(c.id);
-      if (members.includes(userId)) joined.push({ ...c, members });
+    if (user) {
+      const userId = user.id;
+      const joined = [];
+      for (const c of all) {
+        const members = await getCampaignMembers(c.id);
+        if (members.includes(userId)) joined.push({ ...c, members });
+      }
+      const joinedIds = new Set(joined.map(c => c.id));
+      setUserCampaigns(joined);
+      setCampaigns(all.filter(c => !joinedIds.has(c.id)));
+    } else {
+      setCampaigns(all);
     }
-    setUserCampaigns(joined);
     setLoading(false);
   }
 
@@ -59,8 +71,21 @@ export default function CampaignsPage() {
     setLoading(true);
     const token = await getToken();
     await createCampaign(data, token);
+    // Refresh lists after creating a campaign
     const all = await getCampaigns();
-    setCampaigns(all);
+    if (user) {
+      const userId = user.id;
+      const joined = [];
+      for (const c of all) {
+        const members = await getCampaignMembers(c.id);
+        if (members.includes(userId)) joined.push({ ...c, members });
+      }
+      const joinedIds = new Set(joined.map(c => c.id));
+      setUserCampaigns(joined);
+      setCampaigns(all.filter(c => !joinedIds.has(c.id)));
+    } else {
+      setCampaigns(all);
+    }
     setLoading(false);
   }
 
@@ -83,9 +108,8 @@ export default function CampaignsPage() {
       token
     });
     await updateCampaign(updated.id, { name: updated.name, description: updated.description }, token);
-    // Refresh campaigns after update
+    // Refresh lists after update
     const all = await getCampaigns();
-    setCampaigns(all);
     if (user) {
       const userId = user.id;
       const joined = [];
@@ -93,7 +117,11 @@ export default function CampaignsPage() {
         const members = await getCampaignMembers(c.id);
         if (members.includes(userId)) joined.push({ ...c, members });
       }
+      const joinedIds = new Set(joined.map(c => c.id));
       setUserCampaigns(joined);
+      setCampaigns(all.filter(c => !joinedIds.has(c.id)));
+    } else {
+      setCampaigns(all);
     }
     setLoading(false);
   }
