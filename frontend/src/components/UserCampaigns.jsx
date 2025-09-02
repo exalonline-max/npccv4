@@ -68,10 +68,7 @@ import React, { useState } from 'react';
                   >
                     Edit Campaign
                   </button>
-                </div>
-              )}
-              {campaign.members && (
-                <span className="text-xs text-gray-500 ml-2">Members: {campaign.members.length}</span>
+              </div>
               )}
             </div>
           );
@@ -79,4 +76,3 @@ import React, { useState } from 'react';
       </div>
     </div>
   );
-}
