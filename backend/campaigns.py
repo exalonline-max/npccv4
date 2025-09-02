@@ -243,7 +243,22 @@ def leave_campaign(cid: str):
                     (campaign_members_table.c.campaign_id == cid) & (campaign_members_table.c.user_id == user_id)
                 )
             )
-        return jsonify({"ok": True, "campaign": cid, "member": user_id})
+            # If this campaign was the user's active campaign, clear it
+            res = conn.execute(
+                select(user_settings_table.c.active_campaign_id).where(user_settings_table.c.user_id == user_id)
+            ).fetchone()
+            new_active = None
+            if res:
+                # If active matches the left campaign, clear it; otherwise keep existing value
+                if res[0] == cid:
+                    conn.execute(
+                        user_settings_table.update().where(user_settings_table.c.user_id == user_id).values(active_campaign_id=None)
+                    )
+                    new_active = None
+                else:
+                    new_active = res[0]
+            # Return the result including the user's current active campaign (or null)
+        return jsonify({"ok": True, "campaign": cid, "member": user_id, "active": new_active})
     except Exception as e:
         abort(500, f"DB error: {e}")
 
