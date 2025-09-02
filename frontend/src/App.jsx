@@ -114,9 +114,9 @@ function DevEnvBadge(){
   )
 }
 
-import ChatPanel from './chat/ChatPanel'
-import CampaignMenu from './components/CampaignMenu'
-import CampaignsPage from './pages/CampaignsPage'
+import ChatPanel from './chat/components/ChatPanel'
+import CampaignMenu from './campaigns/CampaignMenu'
+import CampaignsPage from './campaigns/CampaignsPage'
 
 export default function App(){
   return (

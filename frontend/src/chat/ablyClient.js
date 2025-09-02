@@ -33,6 +33,4 @@ export function createAblyRealtime(getToken, channel){
   })
 }
 
-// Example Clerk UserButton with custom menu items
-// You can move this into your layout/header file as needed
-// Note: UI components belong in .jsx files. Keep this file focused on Ably client.
+// Moved to src/chat/ablyClient.js
