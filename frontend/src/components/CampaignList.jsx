@@ -8,14 +8,18 @@ export default function CampaignList({ campaigns, onJoin }) {
         {campaigns.map(campaign => {
           const avatarUrl = campaign.avatar || `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(campaign.id || campaign.name)}`;
           return (
-            <div key={campaign.id} className="px-2 py-2 bg-white rounded shadow flex items-center gap-3 border hover:shadow-md transition text-sm">
-              <img src={avatarUrl} alt="avatar" className="h-8 w-8 rounded-full border" />
-              <div className="flex-1 min-w-0">
-                <span className="font-semibold truncate">{campaign.name}</span>
-                <span className="ml-2 text-gray-400 truncate">{campaign.description || <span className="italic">No description</span>}</span>
+            <div key={campaign.id} className="relative px-2 py-2 bg-white rounded shadow flex flex-col sm:flex-row items-start sm:items-center gap-3 border hover:shadow-md transition text-sm">
+              <img src={avatarUrl} alt="avatar" className="h-8 w-8 rounded-full border flex-shrink-0" />
+              <div className="flex-1 min-w-0 w-full">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold truncate">{campaign.name}</span>
+                </div>
+                <div className="mt-1 text-gray-500 break-words whitespace-pre-line w-full">
+                  {campaign.description ? campaign.description : <span className="italic">No description</span>}
+                </div>
               </div>
               <button
-                className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs self-end sm:self-auto"
                 onClick={() => onJoin(campaign.id)}
               >
                 Join
