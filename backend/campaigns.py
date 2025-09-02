@@ -18,6 +18,8 @@ campaigns_table = Table(
     Column("name", String, nullable=False),
     Column("description", String, nullable=True),
     Column("avatar", String, nullable=True),
+    # Owner ID (Clerk user id). Nullable for existing rows; new creates will set this.
+    Column("owner_id", String, nullable=True),
 )
 
 campaign_members_table = Table(
@@ -57,8 +59,9 @@ def _ensure_tables():
 
 @bp.patch("/api/campaigns/<cid>")
 def update_campaign(cid: str):
-    # Ensure the caller is authenticated (and potentially use claims later)
-    require_user()
+    # Only authenticated owners may modify campaign metadata
+    claims = require_user()
+    user_id = claims.get('sub') or claims.get('id') or claims.get('user_id')
 
     data = request.get_json(force=True) or {}
     update_values = {}
@@ -79,13 +82,20 @@ def update_campaign(cid: str):
     try:
         engine = _engine()
         with engine.begin() as conn:
+            # Ensure requester is owner
+            owner_row = conn.execute(select(campaigns_table.c.owner_id).where(campaigns_table.c.id == cid)).fetchone()
+            if not owner_row:
+                abort(404, "Campaign not found")
+            if owner_row[0] != user_id:
+                abort(403, "Only the campaign owner may edit campaign metadata")
+
             # Update
             result = conn.execute(
                 campaigns_table.update()
                 .where(campaigns_table.c.id == cid)
                 .values(**update_values)
             )
-            # If nothing was updated, the campaign likely doesn't exist
+            # If nothing was updated, something unexpected happened
             if result.rowcount == 0:
                 abort(404, "Campaign not found")
 
@@ -96,6 +106,7 @@ def update_campaign(cid: str):
                     campaigns_table.c.name,
                     campaigns_table.c.description,
                     campaigns_table.c.avatar,
+                    campaigns_table.c.owner_id,
                 ).where(campaigns_table.c.id == cid)
             )
             row = res.fetchone()
@@ -156,6 +167,7 @@ def create_campaign():
                 name=name,
                 description=description,
                 avatar=avatar,
+                owner_id=owner_id,
             ))
         return jsonify({"id": cid, "name": name, "description": description, "avatar": avatar})
     except Exception as e:
@@ -213,8 +225,20 @@ def set_active_campaign():
     try:
         engine = _engine()
         with engine.begin() as conn:
+            # Validate that active is either None or a campaign the user has joined or owns
+            if active is not None:
+                # ensure campaign exists
+                c = conn.execute(select(campaigns_table.c.id, campaigns_table.c.owner_id).where(campaigns_table.c.id == active)).fetchone()
+                if not c:
+                    abort(404, 'campaign not found')
+                # check membership or ownership
+                member = conn.execute(select(campaign_members_table.c.user_id).where(
+                    (campaign_members_table.c.campaign_id == active) & (campaign_members_table.c.user_id == user_id)
+                )).fetchone()
+                if not member and c[1] != user_id:
+                    abort(403, 'user is not a member or owner of that campaign')
+
             # upsert-style insert/update
-            # Try update first; if no rows updated, insert
             result = conn.execute(
                 user_settings_table.update().where(user_settings_table.c.user_id == user_id).values(active_campaign_id=active)
             )
