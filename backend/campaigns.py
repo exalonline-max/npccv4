@@ -1,37 +1,4 @@
-@bp.patch('/api/campaigns/<cid>')
-def update_campaign(cid):
-    claims = require_user()
-    data = request.get_json(force=True) or {}
-    name = data.get('name')
-    description = data.get('description')
-    avatar = data.get('avatar')
-    try:
-        engine = _engine()
-        with engine.begin() as conn:
-            update_values = {}
-            if name is not None:
-                update_values['name'] = name
-            if description is not None:
-                update_values['description'] = description
-            if avatar is not None:
-                update_values['avatar'] = avatar
-            if not update_values:
-                abort(400, 'No fields to update')
-            conn.execute(
-                campaigns_table.update().where(campaigns_table.c.id == cid).values(**update_values)
-            )
-            res = conn.execute(select(
-                campaigns_table.c.id,
-                campaigns_table.c.name,
-                campaigns_table.c.description,
-                campaigns_table.c.avatar
-            ).where(campaigns_table.c.id == cid))
-            row = res.fetchone()
-            if not row:
-                abort(404, 'Campaign not found')
-            return jsonify(dict(row._mapping))
-    except Exception as e:
-        abort(500, f"DB error: {e}")
+# Leading duplicated route removed; blueprint/imports defined below
 from flask import Blueprint, request, jsonify, abort
 from sqlalchemy import (
     Table, Column, String, MetaData, create_engine, select, PrimaryKeyConstraint
