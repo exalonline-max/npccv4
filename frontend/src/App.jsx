@@ -1,8 +1,7 @@
-import { ClerkProvider, SignedIn, SignedOut, SignIn } from '@clerk/clerk-react';
-import CampaignsPage from './pages/CampaignsPage';
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
 
+export default function App() {
   return (
     <ClerkProvider publishableKey={clerkPubKey}>
       <SignedIn>
