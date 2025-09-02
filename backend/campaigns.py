@@ -10,6 +10,8 @@ campaigns_table = Table(
     'campaigns', metadata,
     Column('id', String, primary_key=True),
     Column('name', String, nullable=False),
+    Column('description', String, nullable=True),
+    Column('avatar', String, nullable=True),
 )
 
 campaign_members_table = Table(
@@ -38,7 +40,12 @@ def list_campaigns():
     try:
         engine = _engine()
         with engine.connect() as conn:
-            res = conn.execute(select(campaigns_table.c.id, campaigns_table.c.name))
+            res = conn.execute(select(
+                campaigns_table.c.id,
+                campaigns_table.c.name,
+                campaigns_table.c.description,
+                campaigns_table.c.avatar
+            ))
             rows = [dict(r._mapping) for r in res.fetchall()]
         return jsonify(rows)
     except Exception as e:
@@ -50,14 +57,21 @@ def create_campaign():
     claims = require_user()
     data = request.get_json(force=True) or {}
     name = data.get('name', '').strip()
+    description = data.get('description', '').strip()
+    avatar = data.get('avatar', '').strip()
     if not name:
         abort(400, 'name required')
     cid = data.get('id') or ("c" + __import__('secrets').token_hex(6))
     try:
         engine = _engine()
         with engine.begin() as conn:
-            conn.execute(campaigns_table.insert().values(id=cid, name=name))
-        return jsonify({"id": cid, "name": name})
+            conn.execute(campaigns_table.insert().values(
+                id=cid,
+                name=name,
+                description=description,
+                avatar=avatar
+            ))
+        return jsonify({"id": cid, "name": name, "description": description, "avatar": avatar})
     except Exception as e:
         abort(500, f"DB error: {e}")
 
