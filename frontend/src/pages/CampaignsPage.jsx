@@ -8,9 +8,10 @@ import {
   getCampaigns,
   createCampaign,
   joinCampaign,
-  getCampaignMembers,
+  getCampaignMembers
 } from '../utils/api';
 
+export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState([]);
   const [userCampaigns, setUserCampaigns] = useState([]);
   const [activeId, setActiveId] = useState(null);
@@ -70,3 +71,4 @@ import {
       </main>
     </div>
   );
+}
