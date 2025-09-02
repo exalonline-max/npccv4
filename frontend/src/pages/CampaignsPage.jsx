@@ -76,6 +76,12 @@ export default function CampaignsPage() {
   async function handleEditCampaign(updated) {
     setLoading(true);
     const token = await getToken();
+    console.debug('Calling updateCampaign API:', {
+      id: updated.id,
+      name: updated.name,
+      description: updated.description,
+      token
+    });
     await updateCampaign(updated.id, { name: updated.name, description: updated.description }, token);
     // Refresh campaigns after update
     const all = await getCampaigns();
