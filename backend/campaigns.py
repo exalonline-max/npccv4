@@ -137,7 +137,17 @@ def update_campaign(cid: str):
             row = res.fetchone()
             if not row:
                 abort(404, "Campaign not found")
-            return jsonify(dict(row._mapping))
+            # Convert SQLAlchemy Row to dict and serialize datetimes to ISO strings
+            out = dict(row._mapping)
+            for dt_key in ("created_at", "updated_at"):
+                val = out.get(dt_key)
+                try:
+                    if val is not None:
+                        out[dt_key] = val.isoformat()
+                except Exception:
+                    # If it's not a datetime or cannot be serialized, leave as-is
+                    pass
+            return jsonify(out)
     except Exception as e:
         import traceback
         traceback.print_exc()
