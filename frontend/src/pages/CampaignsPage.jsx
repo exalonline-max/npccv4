@@ -8,7 +8,8 @@ import {
   getCampaigns,
   createCampaign,
   joinCampaign,
-  getCampaignMembers
+  getCampaignMembers,
+  updateCampaign
 } from '../utils/api';
 
 export default function CampaignsPage() {
@@ -72,10 +73,23 @@ export default function CampaignsPage() {
     setTimeout(() => setLoading(false), 500); // Simulate loading for UI feedback
   }
 
-  function handleEditCampaign(updated) {
-    // TODO: Save updated campaign to backend
-    setUserCampaigns(userCampaigns.map(c => c.id === updated.id ? updated : c));
-    setCampaigns(campaigns.map(c => c.id === updated.id ? updated : c));
+  async function handleEditCampaign(updated) {
+    setLoading(true);
+    const token = await getToken();
+    await updateCampaign(updated.id, { name: updated.name, description: updated.description }, token);
+    // Refresh campaigns after update
+    const all = await getCampaigns();
+    setCampaigns(all);
+    if (user) {
+      const userId = user.id;
+      const joined = [];
+      for (const c of all) {
+        const members = await getCampaignMembers(c.id);
+        if (members.includes(userId)) joined.push({ ...c, members });
+      }
+      setUserCampaigns(joined);
+    }
+    setLoading(false);
   }
 
   return (

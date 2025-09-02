@@ -1,3 +1,16 @@
+export async function updateCampaign(id, data, token) {
+  const res = await fetch(`${API_BASE}/api/campaigns/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to update campaign');
+  return await res.json();
+}
 
 // Utility functions for frontend API calls to backend
 const API_BASE = import.meta.env.VITE_API_BASE || '';
