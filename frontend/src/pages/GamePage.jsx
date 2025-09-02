@@ -1,0 +1,51 @@
+import React from 'react';
+
+export default function GamePage({ campaign, role = 'player', onClose }) {
+  if (!campaign) return null;
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold">{campaign.name}</h1>
+            <p className="text-sm text-gray-500">Role: <span className="font-semibold capitalize">{role}</span></p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="px-3 py-1 bg-gray-100 rounded" onClick={onClose}>Back</button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="col-span-2">
+            <div className="border rounded p-4 mb-4">
+              <h2 className="font-semibold mb-2">Campaign Description</h2>
+              <p className="text-sm text-gray-700 whitespace-pre-line">{campaign.description || 'No description'}</p>
+            </div>
+
+            <div className="border rounded p-4">
+              <h2 className="font-semibold mb-2">Live Chat</h2>
+              <p className="text-sm text-gray-500">Chat will appear here (Ably integration to follow).</p>
+            </div>
+          </div>
+
+          <aside className="space-y-4">
+            <div className="border rounded p-4">
+              <h3 className="font-semibold mb-2">Quick Actions</h3>
+              <div className="flex flex-col gap-2">
+                <button className="px-3 py-2 bg-blue-600 text-white rounded">Roll Dice</button>
+                <button className="px-3 py-2 bg-green-600 text-white rounded">Open Journal</button>
+                <button className="px-3 py-2 bg-yellow-600 text-white rounded">View Map</button>
+              </div>
+            </div>
+
+            <div className="border rounded p-4">
+              <h3 className="font-semibold mb-2">Players</h3>
+              <p className="text-sm text-gray-500">Player list will appear here.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  );
+}

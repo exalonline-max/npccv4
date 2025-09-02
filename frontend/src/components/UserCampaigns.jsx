@@ -89,6 +89,12 @@ export default function UserCampaigns({ campaigns, activeId, onSetActive, onEdit
                   >
                     Edit Campaign
                   </button>
+                  <button
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700"
+                    onClick={() => { if (typeof onOpen === 'function') onOpen(campaign); setMenuOpen(prev => ({ ...prev, [campaign.id]: false })); }}
+                  >
+                    Open
+                  </button>
               </div>
               )}
             </div>
