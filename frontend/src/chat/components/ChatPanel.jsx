@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth, useUser } from '@clerk/clerk-react'
-import { createAblyRealtime } from './ablyClient'
+import { createAblyRealtime } from '../ablyClient'
 
 export default function ChatPanel({ campaignId }){
   const { getToken } = useAuth()
