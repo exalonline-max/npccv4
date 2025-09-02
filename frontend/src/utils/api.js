@@ -52,3 +52,29 @@ export async function getCampaignMembers(id) {
   if (!res.ok) throw new Error('Failed to fetch members');
   return await res.json();
 }
+
+export async function getActiveCampaign(token) {
+  const res = await fetch(`${API_BASE}/api/user/active_campaign`, {
+    method: 'GET',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to fetch active campaign');
+  return await res.json();
+}
+
+export async function setActiveCampaign(activeId, token) {
+  const res = await fetch(`${API_BASE}/api/user/active_campaign`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ active: activeId }),
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to set active campaign');
+  return await res.json();
+}

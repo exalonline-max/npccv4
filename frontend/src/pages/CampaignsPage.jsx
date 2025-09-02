@@ -43,6 +43,22 @@ export default function CampaignsPage() {
       setLoading(false);
     }
     refreshLists();
+    // Also load persisted active campaign for this user
+    async function loadActive() {
+      if (!user) return;
+      try {
+        const token = await getToken();
+        const { getActiveCampaign } = await import('../utils/api');
+        const res = await getActiveCampaign(token);
+        if (res && res.active) {
+          setActiveId(res.active);
+          // activeCampaign will be set after we populate userCampaigns below
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    loadActive();
   }, [user]);
 
   async function handleJoin(id) {
@@ -89,13 +105,19 @@ export default function CampaignsPage() {
     setLoading(false);
   }
 
-  function handleSetActive(id) {
+  async function handleSetActive(id) {
     setLoading(true);
     setActiveId(id);
     const campaign = userCampaigns.find(c => c.id === id);
     setActiveCampaign(campaign);
-    // TODO: Save active campaign to user profile via backend
-    setTimeout(() => setLoading(false), 500); // Simulate loading for UI feedback
+    try {
+      const token = await getToken();
+      const { setActiveCampaign } = await import('../utils/api');
+      await setActiveCampaign(id, token);
+    } catch (e) {
+      // ignore saving error for now
+    }
+    setLoading(false);
   }
 
   async function handleEditCampaign(updated) {

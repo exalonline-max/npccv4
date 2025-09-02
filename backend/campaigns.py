@@ -28,6 +28,16 @@ campaign_members_table = Table(
     PrimaryKeyConstraint("campaign_id", "user_id", name="pk_campaign_members"),
 )
 
+# Simple user settings table to persist small per-user preferences such as
+# the currently active campaign. Kept in this module so the existing
+# `metadata.create_all()` call will create the table automatically.
+user_settings_table = Table(
+    "user_settings",
+    metadata,
+    Column("user_id", String, primary_key=True),
+    Column("active_campaign_id", String, nullable=True),
+)
+
 # --- Engine helper ---
 def _engine():
     # pool_pre_ping helps with stale connections on hosts like Render
@@ -174,5 +184,42 @@ def join_campaign(cid: str):
             if not existing:
                 conn.execute(campaign_members_table.insert().values(campaign_id=cid, user_id=user_id))
         return jsonify({"ok": True, "campaign": cid, "member": user_id})
+    except Exception as e:
+        abort(500, f"DB error: {e}")
+
+
+@bp.get('/api/user/active_campaign')
+def get_active_campaign():
+    claims = require_user()
+    user_id = claims.get('sub') or claims.get('id') or claims.get('user_id')
+    try:
+        engine = _engine()
+        with engine.connect() as conn:
+            res = conn.execute(select(user_settings_table.c.active_campaign_id).where(user_settings_table.c.user_id == user_id)).fetchone()
+            if not res:
+                return jsonify({"active": None})
+            return jsonify({"active": res[0]})
+    except Exception as e:
+        abort(500, f"DB error: {e}")
+
+
+@bp.post('/api/user/active_campaign')
+def set_active_campaign():
+    claims = require_user()
+    user_id = claims.get('sub') or claims.get('id') or claims.get('user_id')
+    data = request.get_json(force=True) or {}
+    active = data.get('active')
+    # allow clearing by sending null
+    try:
+        engine = _engine()
+        with engine.begin() as conn:
+            # upsert-style insert/update
+            # Try update first; if no rows updated, insert
+            result = conn.execute(
+                user_settings_table.update().where(user_settings_table.c.user_id == user_id).values(active_campaign_id=active)
+            )
+            if result.rowcount == 0:
+                conn.execute(user_settings_table.insert().values(user_id=user_id, active_campaign_id=active))
+        return jsonify({"ok": True, "active": active})
     except Exception as e:
         abort(500, f"DB error: {e}")
