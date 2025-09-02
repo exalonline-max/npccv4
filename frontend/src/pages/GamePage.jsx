@@ -1,6 +1,24 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 export default function GamePage({ campaign, role = 'player', onClose }) {
+  const [members, setMembers] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      if (!campaign) return;
+      try {
+        const { getCampaignMembers } = await import('../utils/api');
+        const m = await getCampaignMembers(campaign.id);
+        if (mounted) setMembers(m || []);
+      } catch (e) {
+        console.error('Failed to load members', e);
+      }
+    }
+    load();
+    return () => { mounted = false; };
+  }, [campaign]);
+
   if (!campaign) return null;
 
   return (
@@ -41,7 +59,15 @@ export default function GamePage({ campaign, role = 'player', onClose }) {
 
             <div className="border rounded p-4">
               <h3 className="font-semibold mb-2">Players</h3>
-              <p className="text-sm text-gray-500">Player list will appear here.</p>
+              <div className="text-sm text-gray-700 space-y-1">
+                {members.length === 0 && <div className="italic text-gray-500">No players yet</div>}
+                {members.map(id => (
+                  <div key={id} className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-600">{id.slice(0,2)}</div>
+                    <div className="truncate">{id}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </aside>
         </div>

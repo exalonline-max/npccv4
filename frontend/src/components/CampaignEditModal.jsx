@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 
 export default function CampaignEditModal({ campaign, open, onClose, onSave }) {
-  const [name, setName] = useState(campaign?.name || '');
-  const [description, setDescription] = useState(campaign?.description || '');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+
+  React.useEffect(() => {
+    setName(campaign?.name || '');
+    setDescription(campaign?.description || '');
+  }, [campaign]);
 
   function handleSubmit(e) {
     e.preventDefault();

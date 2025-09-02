@@ -212,6 +212,26 @@ def join_campaign(cid: str):
         abort(500, f"DB error: {e}")
 
 
+@bp.post('/api/campaigns/<cid>/leave')
+def leave_campaign(cid: str):
+    claims = require_user()
+    user_id = claims.get('sub') or claims.get('id') or claims.get('user_id')
+    if not user_id:
+        abort(400, 'unable to determine user id')
+    try:
+        engine = _engine()
+        with engine.begin() as conn:
+            # delete membership if exists
+            conn.execute(
+                campaign_members_table.delete().where(
+                    (campaign_members_table.c.campaign_id == cid) & (campaign_members_table.c.user_id == user_id)
+                )
+            )
+        return jsonify({"ok": True, "campaign": cid, "member": user_id})
+    except Exception as e:
+        abort(500, f"DB error: {e}")
+
+
 @bp.get('/api/user/active_campaign')
 def get_active_campaign():
     claims = require_user()

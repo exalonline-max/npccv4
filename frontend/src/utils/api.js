@@ -47,6 +47,18 @@ export async function joinCampaign(id, token) {
   return await res.json();
 }
 
+export async function leaveCampaign(id, token) {
+  const res = await fetch(`${API_BASE}/api/campaigns/${id}/leave`, {
+    method: 'POST',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to leave campaign');
+  return await res.json();
+}
+
 export async function getCampaignMembers(id) {
   const res = await fetch(`${API_BASE}/api/campaigns/${id}/members`, { credentials: 'include' });
   if (!res.ok) throw new Error('Failed to fetch members');
