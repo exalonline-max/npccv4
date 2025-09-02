@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+
 export default function UserCampaigns({ campaigns, activeId, onSetActive }) {
   const [menuOpen, setMenuOpen] = useState({});
 
